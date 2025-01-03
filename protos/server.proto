@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+service Server {
+    rpc Hello(Test) returns (Test);
+    rpc RegisterNode(RegisterRequest) returns (stream RegisterResponse);
+    rpc InformReady(ReadyRequest) returns (ReadyRequest);
+    rpc StartInference(StartInferenceRequest) returns (StartInferenceResponse);
+    rpc EndInference(EndInferenceRequest) returns (EndInferenceResponse);
+}
+
+message Test {}
+
+message StartInferenceRequest {
+    repeated float input_tensor = 1; 
+}
+
+message StartInferenceResponse {
+    int32 status_code = 1;
+    string message = 2;
+    repeated float result = 3;
+}
+
+message EndInferenceRequest {
+    int32 task_id = 1;
+    repeated float result = 2; 
+}
+
+message EndInferenceResponse {
+    int32 status_code = 1;
+    string message = 2;
+}
+
+message ReadyRequest {
+}
+
+message ReadyResponse {
+    int32 status_code = 1;
+    string message = 2;
+}
+
+message RegisterRequest {
+    string ip = 1;
+}
+
+message RegisterResponse {
+    int32 status_code = 1;
+    string message = 2;
+    string first_node = 4;
+    string prev_node = 5;
+    string model_part_id = 6;
+    int32 port = 7;
+    bytes chunk = 8; // Chunk of the model file
+}

@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+service NodeService {
+    rpc Infer (InferenceRequest) returns (InferenceResponse);
+    rpc UpdateNextNode(UpdateNextNodeRequest) returns (UpdateNextNodeResponse);
+}
+
+message InferenceRequest {
+    int32 next_model_part_id = 1;
+    int32 task_id = 2;
+    repeated float input_tensor = 3;
+}
+
+message InferenceResponse {
+   int32 status_code = 1;
+   string message = 2;
+   int32 task_id = 3;
+   int32 current_model_part_id = 4; 
+}
+
+message UpdateNextNodeRequest {
+    string next_node = 1;
+}
+
+message UpdateNextNodeResponse {
+    int32 status_code = 1;
+    string message = 2;
+}
