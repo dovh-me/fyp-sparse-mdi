@@ -42,8 +42,10 @@ class EndInferenceResponse(_message.Message):
     def __init__(self, status_code: _Optional[int] = ..., message: _Optional[str] = ...) -> None: ...
 
 class ReadyRequest(_message.Message):
-    __slots__ = ()
-    def __init__(self) -> None: ...
+    __slots__ = ("port",)
+    PORT_FIELD_NUMBER: _ClassVar[int]
+    port: int
+    def __init__(self, port: _Optional[int] = ...) -> None: ...
 
 class ReadyResponse(_message.Message):
     __slots__ = ("status_code", "message")

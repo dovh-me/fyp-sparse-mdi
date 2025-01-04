@@ -32,7 +32,9 @@ python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. sparsify.prot
 # Commands
 
 ## gRPC file generation
+
 ### Sample
+
 ```bash
 python -m grpc_tools.protoc \
     -I. \
@@ -44,19 +46,17 @@ python -m grpc_tools.protoc \
 ### Server proto
 
 ```bash
-python -m grpc_tools.protoc -I./protos --python_out=gen --pyi_out=gen --grpc_python_out=gen ./protos/server.proto
+python -m grpc_tools.protoc -I./protos --python_out=generated --pyi_out=generated --grpc_python_out=generated ./protos/server.proto
 ```
 
 ### Node proto
 
 ```bash
-python -m grpc_tools.protoc -I./protos --python_out=gen --pyi_out=gen --grpc_python_out=gen ./protos/node.proto
+python -m grpc_tools.protoc -I./protos --python_out=generated --pyi_out=generated --grpc_python_out=generated ./protos/node.proto
 ```
-
 
 ## Debug Run
 
 ```bash
 GRPC_VERBOSITY=debug GRPC_TRACE=all python <script name>.py
 ```
-

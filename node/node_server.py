@@ -3,10 +3,10 @@ import asyncio
 import grpc
 import onnxruntime as ort
 
-
 import generated.node_pb2 as node_pb2
 import generated.node_pb2_grpc as node_pb2_grpc
 from util import to_numpy, status
+import traceback 
 
 class NodeServer(node_pb2_grpc.NodeServiceServicer): 
     def __init__(self, model_path, node: any):
@@ -33,30 +33,40 @@ class NodeServer(node_pb2_grpc.NodeServiceServicer):
             task_id = request.task_id
             
             if(input == None):
-               return
+                message = f"Task ID: {task_id} | Input is not provided"
+                return node_pb2.InferenceResponse(
+                status_code=status.BAD_REQUEST,
+                message= message
+            ) 
 
             if(task_id == None):
                 task_id = self.current_task_id
                 self.current_task_id +=1
 
+            print(f"Inference task received: {task_id}")
+
             # Load the onnx and perform the inference 
             ort_session = self.ort_session
-            ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(input)}
+            ort_inputs = {ort_session.get_inputs()[0].name: input}
 
             # Schedule an inference task
-            self.async_inference(task_id=task_id, ort_inputs=ort_inputs)
+            task = self.async_inference(task_id=task_id, ort_inputs=ort_inputs)
+            # Fire and forget. Prevents us from managing the lifecycle fo the task
+            asyncio.create_task(task)
             
             message = f"[id:{model_part_id}] Inference accepted for task_id: {task_id}"
 
             return node_pb2.InferenceResponse(
                 status_code=status.INFERENCE_ACCEPTED,
-                message="",
-                model_part_id=model_part_id, 
+                # message="",
+                # current_model_part_id=model_part_id, 
                 task_id=task_id
             )
         except Exception as e:
-            message = f"[id:{model_part_id}] Inference failed: {str(e)}"
+            message = f"[id: {model_part_id}] Inference failed: {str(e)}"
+
             print(message)
+            traceback.print_exc()
             context.set_details(message)
             context.set_code(grpc.StatusCode.INTERNAL)
             return node_pb2.InferenceResponse(status_code=status.SERVER_ERROR) 
@@ -67,21 +77,24 @@ class NodeServer(node_pb2_grpc.NodeServiceServicer):
         Update the next node in the network.
         """
         try:
-            self.node.next_node = request.next_node_address
+            self.node.next_node = request.next_node
             print(f"Next node updated to: {self.node.next_node}")
 
             return node_pb2.UpdateNextNodeResponse(
                 status_code=status.NODE_UPDATE_SUCCESS,
             )
         except Exception as e:
+            message=f"There was an error updating next node reference {e}"
+            print(message)
             return node_pb2.UpdateNextNodeResponse(
                 status_code=status.NODE_UPDATE_ERROR,
-                message=str(e)
+                message=message
             ) 
 
     async def async_inference(self, task_id: int, ort_inputs):
         # Run inference in the ONNX session asynchronously
         loop = asyncio.get_event_loop()
+        print(ort_inputs)
         output_tensor = await loop.run_in_executor(None, lambda: self.ort_session.run(None, ort_inputs))
 
         # Propagate to the next node

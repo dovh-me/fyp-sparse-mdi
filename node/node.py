@@ -9,7 +9,7 @@ module_path = os.path.abspath('../')
 sys.path.insert(0, module_path)
 
 from node.node_server import main as serve
-from generated.node_pb2 import InferenceRequest
+from generated.node_pb2 import InferenceRequest, InferenceResponse
 from generated.node_pb2_grpc import NodeServiceStub
 from generated.server_pb2_grpc import ServerStub 
 from generated.server_pb2 import EndInferenceRequest, RegisterRequest, Test, ReadyRequest
@@ -76,10 +76,17 @@ class Node:
                 task_id= task_id, 
                 input_tensor=input_tensor
             )
-            response = await stub.Infer(request) 
 
-            if(response.status):
-                print(f"Inference propagated to next node with status: {response.status}")
+            message = f"[{task_id}]: Forwarding task to next node; {self.next_node}"
+            print(message)
+
+            response: InferenceResponse = await stub.Infer(request) 
+
+            if(response.status_code != status.INFERENCE_ACCEPTED):
+                message = f"[{task_id}]: There was an error forwarding inference task to: {self.next_node}"
+                print(message)
+
+            print(f"Inference successfully propagated to next node with status: {response.status}")
 
     async def finish_inference(self, task_id: int, result):
         async with grpc.aio.insecure_channel(self.coordinator_address) as channel:
@@ -111,15 +118,10 @@ async def main():
             print('Starting the gRPC server...')
             server_start_async = serve(model_path=model_file_path, node=node, port=port)
 
-        # Starting the new connection... this may not be efficient
-        # async with grpc.aio.insecure_channel(node.coordinator_address) as channel:
-            # stub = ServerStub(channel)
-
-             
             # The server registers the ip of the current node as the last ip
             # Could be an issue - verify
             print(f'Informing node is ready {node.model_part_id}')
-            readyRequest = ReadyRequest()
+            readyRequest = ReadyRequest(port=port)
             inform_ready_async = await stub.InformReady(readyRequest)
 
             # # TODO : This is not an idea approach.. please check for better solutions
