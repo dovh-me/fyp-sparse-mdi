@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nnode.proto\"U\n\x10InferenceRequest\x12\x1a\n\x12next_model_part_id\x18\x01 \x01(\x05\x12\x0f\n\x07task_id\x18\x02 \x01(\x05\x12\x14\n\x0cinput_tensor\x18\x03 \x03(\x02\"i\n\x11InferenceResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x0f\n\x07task_id\x18\x03 \x01(\x05\x12\x1d\n\x15\x63urrent_model_part_id\x18\x04 \x01(\x05\"*\n\x15UpdateNextNodeRequest\x12\x11\n\tnext_node\x18\x01 \x01(\t\">\n\x16UpdateNextNodeResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t2\x80\x01\n\x0bNodeService\x12.\n\x05Infer\x12\x11.InferenceRequest\x1a\x12.InferenceResponse\x12\x41\n\x0eUpdateNextNode\x12\x16.UpdateNextNodeRequest\x1a\x17.UpdateNextNodeResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nnode.proto\"U\n\x10InferenceRequest\x12\x1a\n\x12next_model_part_id\x18\x01 \x01(\x05\x12\x0f\n\x07task_id\x18\x02 \x01(\x05\x12\x14\n\x0cinput_tensor\x18\x03 \x01(\x0c\"i\n\x11InferenceResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x0f\n\x07task_id\x18\x03 \x01(\x05\x12\x1d\n\x15\x63urrent_model_part_id\x18\x04 \x01(\x05\"*\n\x15UpdateNextNodeRequest\x12\x11\n\tnext_node\x18\x01 \x01(\t\">\n\x16UpdateNextNodeResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t2\x80\x01\n\x0bNodeService\x12.\n\x05Infer\x12\x11.InferenceRequest\x1a\x12.InferenceResponse\x12\x41\n\x0eUpdateNextNode\x12\x16.UpdateNextNodeRequest\x1a\x17.UpdateNextNodeResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)

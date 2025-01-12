@@ -13,6 +13,7 @@ import generated.server_pb2 as server_pb2
 import generated.server_pb2_grpc as server_pb2_grpc
 import generated.node_pb2 as node_pb2
 import generated.node_pb2_grpc as node_pb2_grpc
+import traceback
 
 node_ports = 50052
 
@@ -52,6 +53,7 @@ class Server(server_pb2_grpc.ServerServicer):
         # Allocate the next available model part
         model_parts = sorted([os.path.splitext(filename)[0] for filename in os.listdir(self.model_partitions_dir)])
         assigned_part = None
+
         for part in model_parts:
             if part not in self.node_registry.values():
                 assigned_part = part
@@ -134,37 +136,44 @@ class Server(server_pb2_grpc.ServerServicer):
 
 
     async def StartInference(self, request: server_pb2.StartInferenceRequest, context):
-        task_id = self.task_track_counter
-        self.task_track_counter += 1
-        print(f"Inference request received! Starting new inference task with id: {task_id}") 
+        try:
+            task_id = self.task_track_counter
+            self.task_track_counter += 1
+            print(f"Inference request received! Starting new inference task with id: {task_id}") 
 
-        if(self.task_registry.get(task_id) != None):
-            print(f"Task ids overlapped. {task_id}: is already in use.")
-            return server_pb2.StartInferenceResponse(status_code=status.SERVER_ERROR, message="An internal server error occurred. Please try again.")
+            if(self.task_registry.get(task_id, None) != None):
+                print(f"Task ids overlapped. {task_id}: is already in use.")
+                return server_pb2.StartInferenceResponse(status_code=status.SERVER_ERROR, message="An internal server error occurred. Please try again.")
 
-        input_tensor = request.input_tensor
-        if(input_tensor == None):
-            message=f"Inference Error: Input tensor is not provided for the inference task. Task ID: {task_id}"
-            return server_pb2.StartInferenceResponse(status_code=status.BAD_REQUEST, message=message)
+            print(f"StartInference:request => {request}")
+            input_tensor = request.input_tensor
+            if(input_tensor == None or input_tensor == []):
+                message=f"Inference Error: Input tensor is not provided for the inference task. Task ID: {task_id}"
+                return server_pb2.StartInferenceResponse(status_code=status.BAD_REQUEST, message=message)
 
-        async with grpc.aio.insecure_channel(self.first_node_ip) as channel:
-            node_stub = node_pb2_grpc.NodeServiceStub(channel)
-            request = node_pb2.InferenceRequest(input_tensor=input_tensor) 
+            async with grpc.aio.insecure_channel(self.first_node_ip) as channel:
+                node_stub = node_pb2_grpc.NodeServiceStub(channel)
+                # Convert the input to a bytes stream
+                # input_tensor = input_tensor.astype('float32') / 255.0
+                # input_tensor = input_tensor.tobytes()
+                request = node_pb2.InferenceRequest(input_tensor=input_tensor) 
 
-            response: node_pb2.InferenceResponse = await node_stub.Infer(request)
+                response: node_pb2.InferenceResponse = await node_stub.Infer(request)
 
-            if(response.status_code != status.INFERENCE_ACCEPTED):
-                print(f"There was an error starting inference Task ID: {response.task_id}, Status: {response.status_code}, Message: {response.message}")
-                return server_pb2.StartInferenceResponse(status_code=status.SERVER_ERROR, message="There was an error starting inference")  
+                if(response.status_code != status.INFERENCE_ACCEPTED):
+                    print(f"There was an error starting inference Task ID: {response.task_id}, Status: {response.status_code}, Message: {response.message}")
+                    return server_pb2.StartInferenceResponse(status_code=status.SERVER_ERROR, message="There was an error starting inference")  
 
-            print(f"Task ID [{task_id}]: Inference accepted")
+                print(f"Task ID [{task_id}]: Inference accepted")
 
-            task = asyncio.Future()
-            self.task_registry.set(task_id, task) 
+                task = asyncio.Future()
+                self.task_registry[task_id] = task 
 
-            print(f"Waiting for inference result: Task ID: {task_id}")
-            result = await task 
-        return server_pb2.StartInferenceResponse(status_code=status.INFERENCE_ACCEPTED, result=result)
+                print(f"Waiting for inference result: Task ID: {task_id}")
+                result = await task 
+            return server_pb2.StartInferenceResponse(status_code=status.INFERENCE_SUCCESS, result=result)
+        except:
+            traceback.print_exc()
 
     async def EndInference(self, request: server_pb2.EndInferenceRequest, context):
         task_id = request.task_id
@@ -172,8 +181,7 @@ class Server(server_pb2_grpc.ServerServicer):
             print("Not processing end inference request since task_id is not defined")
             return server_pb2.EndInferenceResponse(status_code=status.BAD_REQUEST, message="Task id is not defined")
 
-        task = self.task_registry.get()
-
+        task = self.task_registry[task_id]
         if(task == None): 
             print(f"Received task id is not valid {task_id}")
             return server_pb2.EndInferenceResponse(status_code=status.SERVER_ERROR, message="Invalid task id.") 

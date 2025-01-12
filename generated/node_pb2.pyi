@@ -1,7 +1,6 @@
-from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Iterable as _Iterable, Optional as _Optional
+from typing import ClassVar as _ClassVar, Optional as _Optional
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -12,8 +11,8 @@ class InferenceRequest(_message.Message):
     INPUT_TENSOR_FIELD_NUMBER: _ClassVar[int]
     next_model_part_id: int
     task_id: int
-    input_tensor: _containers.RepeatedScalarFieldContainer[float]
-    def __init__(self, next_model_part_id: _Optional[int] = ..., task_id: _Optional[int] = ..., input_tensor: _Optional[_Iterable[float]] = ...) -> None: ...
+    input_tensor: bytes
+    def __init__(self, next_model_part_id: _Optional[int] = ..., task_id: _Optional[int] = ..., input_tensor: _Optional[bytes] = ...) -> None: ...
 
 class InferenceResponse(_message.Message):
     __slots__ = ("status_code", "message", "task_id", "current_model_part_id")

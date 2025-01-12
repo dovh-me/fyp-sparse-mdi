@@ -6,12 +6,14 @@ import onnxruntime as ort
 import generated.node_pb2 as node_pb2
 import generated.node_pb2_grpc as node_pb2_grpc
 from util import to_numpy, status
-import traceback 
+import traceback
+import numpy as np
 
 class NodeServer(node_pb2_grpc.NodeServiceServicer): 
     def __init__(self, model_path, node: any):
         self.model_path = model_path
         self.node = node
+        self.current_task_id = 0
 
         # Loading the ONNX Model partition.
         # Assuming the model part is downloaded and verify when the node server
@@ -19,9 +21,17 @@ class NodeServer(node_pb2_grpc.NodeServiceServicer):
         print("Loading model for inference")
         self.ort_session = ort.InferenceSession(model_path)
         print("Model successfully loaded for inference")
+
+        # Store the input shape from the model's input metadata
+        input_metadata = self.ort_session.get_inputs()[0]
+        self.input_name = input_metadata.name
+        self.input_shape = input_metadata.shape  # e.g., [batch_size, 3, 32, 32]
+        print(f"Model input shape: {self.input_shape}")
+
         super().__init__()
 
 
+     
     async def Infer(self, request: node_pb2.InferenceRequest, context: grpc.RpcContext):
         """
         Perform inference using the assigned model part.
@@ -31,46 +41,48 @@ class NodeServer(node_pb2_grpc.NodeServiceServicer):
         try:
             input = request.input_tensor
             task_id = request.task_id
-            
-            if(input == None):
-                message = f"Task ID: {task_id} | Input is not provided"
-                return node_pb2.InferenceResponse(
-                status_code=status.BAD_REQUEST,
-                message= message
-            ) 
 
-            if(task_id == None):
+            if not input:
+                message = f"Task ID: {task_id} | Input tensor is not provided"
+                return node_pb2.InferenceResponse(
+                    status_code=status.BAD_REQUEST,
+                    message=message
+                )
+
+            if not task_id:
                 task_id = self.current_task_id
-                self.current_task_id +=1
+                self.current_task_id += 1
 
             print(f"Inference task received: {task_id}")
+            print(f"Input tensor type: {type(input)}, length: {len(input)}")
 
-            # Load the onnx and perform the inference 
+            # Convert byte stream to NumPy array
+            input_array = np.frombuffer(input, dtype=np.float32)
+            reshaped_input = input_array.reshape(self.input_shape[1:])  # Skip batch dimension if dynamic
+            print(f"Reshaped input: {reshaped_input.shape}")
+
+            # Load the ONNX model and perform the inference
             ort_session = self.ort_session
-            ort_inputs = {ort_session.get_inputs()[0].name: input}
+            ort_inputs = {ort_session.get_inputs()[0].name: reshaped_input}
 
             # Schedule an inference task
             task = self.async_inference(task_id=task_id, ort_inputs=ort_inputs)
-            # Fire and forget. Prevents us from managing the lifecycle fo the task
             asyncio.create_task(task)
-            
+
             message = f"[id:{model_part_id}] Inference accepted for task_id: {task_id}"
 
             return node_pb2.InferenceResponse(
                 status_code=status.INFERENCE_ACCEPTED,
-                # message="",
-                # current_model_part_id=model_part_id, 
+                message=message,
                 task_id=task_id
             )
         except Exception as e:
             message = f"[id: {model_part_id}] Inference failed: {str(e)}"
-
             print(message)
             traceback.print_exc()
             context.set_details(message)
             context.set_code(grpc.StatusCode.INTERNAL)
-            return node_pb2.InferenceResponse(status_code=status.SERVER_ERROR) 
-
+            return node_pb2.InferenceResponse(status_code=status.SERVER_ERROR)
 
     async def UpdateNextNode(self, request: node_pb2.UpdateNextNodeRequest, context: grpc.RpcContext):
         """

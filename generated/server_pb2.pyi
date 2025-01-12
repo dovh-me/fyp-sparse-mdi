@@ -1,7 +1,6 @@
-from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Iterable as _Iterable, Optional as _Optional
+from typing import ClassVar as _ClassVar, Optional as _Optional
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -12,8 +11,8 @@ class Test(_message.Message):
 class StartInferenceRequest(_message.Message):
     __slots__ = ("input_tensor",)
     INPUT_TENSOR_FIELD_NUMBER: _ClassVar[int]
-    input_tensor: _containers.RepeatedScalarFieldContainer[float]
-    def __init__(self, input_tensor: _Optional[_Iterable[float]] = ...) -> None: ...
+    input_tensor: bytes
+    def __init__(self, input_tensor: _Optional[bytes] = ...) -> None: ...
 
 class StartInferenceResponse(_message.Message):
     __slots__ = ("status_code", "message", "result")
@@ -22,16 +21,16 @@ class StartInferenceResponse(_message.Message):
     RESULT_FIELD_NUMBER: _ClassVar[int]
     status_code: int
     message: str
-    result: _containers.RepeatedScalarFieldContainer[float]
-    def __init__(self, status_code: _Optional[int] = ..., message: _Optional[str] = ..., result: _Optional[_Iterable[float]] = ...) -> None: ...
+    result: bytes
+    def __init__(self, status_code: _Optional[int] = ..., message: _Optional[str] = ..., result: _Optional[bytes] = ...) -> None: ...
 
 class EndInferenceRequest(_message.Message):
     __slots__ = ("task_id", "result")
     TASK_ID_FIELD_NUMBER: _ClassVar[int]
     RESULT_FIELD_NUMBER: _ClassVar[int]
     task_id: int
-    result: _containers.RepeatedScalarFieldContainer[float]
-    def __init__(self, task_id: _Optional[int] = ..., result: _Optional[_Iterable[float]] = ...) -> None: ...
+    result: bytes
+    def __init__(self, task_id: _Optional[int] = ..., result: _Optional[bytes] = ...) -> None: ...
 
 class EndInferenceResponse(_message.Message):
     __slots__ = ("status_code", "message")

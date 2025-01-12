@@ -11,18 +11,18 @@ service Server {
 message Test {}
 
 message StartInferenceRequest {
-    repeated float input_tensor = 1; 
+    bytes input_tensor = 1; 
 }
 
 message StartInferenceResponse {
     int32 status_code = 1;
     string message = 2;
-    repeated float result = 3;
+    bytes result = 3;
 }
 
 message EndInferenceRequest {
     int32 task_id = 1;
-    repeated float result = 2; 
+    bytes result = 2; 
 }
 
 message EndInferenceResponse {

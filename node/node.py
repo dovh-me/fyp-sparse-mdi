@@ -71,8 +71,12 @@ class Node:
         
         async with grpc.aio.insecure_channel(self.next_node) as channel:
             stub = NodeServiceStub(channel)
+
+            # Convert to bytes
+            input_tensor = input_tensor.tobytes()
+
             request = InferenceRequest(
-                next_model_part_id=self.model_part_id+1,
+                next_model_part_id=self.model_part_id+1, # This is not ideal
                 task_id= task_id, 
                 input_tensor=input_tensor
             )
