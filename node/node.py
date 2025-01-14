@@ -66,17 +66,19 @@ class Node:
         return (updated_model_file_path, self.port)
 
     async def forward_to_next_node(self, task_id: int, input_tensor):
+        # Convert to bytes
+        input_tensor = input_tensor.astype('float32') / 255.0
+        input_tensor = input_tensor.tobytes()
+
         if(self.next_node == None):
+            await self.finish_inference(task_id=task_id, result=input_tensor) 
             return
         
         async with grpc.aio.insecure_channel(self.next_node) as channel:
             stub = NodeServiceStub(channel)
 
-            # Convert to bytes
-            input_tensor = input_tensor.tobytes()
-
             request = InferenceRequest(
-                next_model_part_id=self.model_part_id+1, # This is not ideal
+                # next_model_part_id=self.model_part_id+1, # This is not ideal
                 task_id= task_id, 
                 input_tensor=input_tensor
             )
@@ -90,7 +92,7 @@ class Node:
                 message = f"[{task_id}]: There was an error forwarding inference task to: {self.next_node}"
                 print(message)
 
-            print(f"Inference successfully propagated to next node with status: {response.status}")
+            print(f"Inference successfully propagated to next node with status: {response.status_code}")
 
     async def finish_inference(self, task_id: int, result):
         async with grpc.aio.insecure_channel(self.coordinator_address) as channel:

@@ -45,8 +45,8 @@ async def perform_inference(server_address: str, x_test, y_test):
                 traceback.print_exc()
 
             # Optional: Break early for testing
-            if i >= 100:  # Test on the first 100 images
-                break
+            # if i >= 100:  # Test on the first 100 images
+            #     break
 
         accuracy = correct_predictions / (i + 1)
         print(f"Accuracy: {accuracy:.2%}")

@@ -130,6 +130,7 @@ class Server(server_pb2_grpc.ServerServicer):
         # Update the last node
         return server_pb2.ReadyResponse(status_code=status.NODE_READY_INFORM_SUCCESS) 
 
+    # TODO : Remove 
     async def Hello(self, request, context):
         print("Client says Hello")
         return server_pb2.Test() 
@@ -145,19 +146,17 @@ class Server(server_pb2_grpc.ServerServicer):
                 print(f"Task ids overlapped. {task_id}: is already in use.")
                 return server_pb2.StartInferenceResponse(status_code=status.SERVER_ERROR, message="An internal server error occurred. Please try again.")
 
-            print(f"StartInference:request => {request}")
+            print(f"StartInference:request")
             input_tensor = request.input_tensor
             if(input_tensor == None or input_tensor == []):
-                message=f"Inference Error: Input tensor is not provided for the inference task. Task ID: {task_id}"
+                message=f"Inference Error: Input tensor not provided. Task ID: {task_id}"
                 return server_pb2.StartInferenceResponse(status_code=status.BAD_REQUEST, message=message)
 
             async with grpc.aio.insecure_channel(self.first_node_ip) as channel:
                 node_stub = node_pb2_grpc.NodeServiceStub(channel)
-                # Convert the input to a bytes stream
-                # input_tensor = input_tensor.astype('float32') / 255.0
-                # input_tensor = input_tensor.tobytes()
-                request = node_pb2.InferenceRequest(input_tensor=input_tensor) 
 
+                # Convert the input to a bytes stream
+                request = node_pb2.InferenceRequest(input_tensor=input_tensor) 
                 response: node_pb2.InferenceResponse = await node_stub.Infer(request)
 
                 if(response.status_code != status.INFERENCE_ACCEPTED):

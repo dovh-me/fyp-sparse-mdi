@@ -58,11 +58,12 @@ class NodeServer(node_pb2_grpc.NodeServiceServicer):
 
             # Convert byte stream to NumPy array
             input_array = np.frombuffer(input, dtype=np.float32)
-            reshaped_input = input_array.reshape(self.input_shape[1:])  # Skip batch dimension if dynamic
+            reshaped_input = input_array.reshape(self.input_shape)  # Skip batch dimension if dynamic
             print(f"Reshaped input: {reshaped_input.shape}")
 
             # Load the ONNX model and perform the inference
             ort_session = self.ort_session
+            print(f"Model input: {ort_session.get_inputs()[0]}")
             ort_inputs = {ort_session.get_inputs()[0].name: reshaped_input}
 
             # Schedule an inference task
@@ -106,11 +107,11 @@ class NodeServer(node_pb2_grpc.NodeServiceServicer):
     async def async_inference(self, task_id: int, ort_inputs):
         # Run inference in the ONNX session asynchronously
         loop = asyncio.get_event_loop()
-        print(ort_inputs)
         output_tensor = await loop.run_in_executor(None, lambda: self.ort_session.run(None, ort_inputs))
 
+        print(f'[taskId: {task_id}]output_tensor', output_tensor[0].shape)
         # Propagate to the next node
-        await self.node.forward_to_next_node(task_id=task_id, input_tensor=output_tensor)
+        await self.node.forward_to_next_node(task_id=task_id, input_tensor=output_tensor[0])
 
 
 async def main(model_path, node, port=55001): 
