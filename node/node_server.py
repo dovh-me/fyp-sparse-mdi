@@ -59,11 +59,11 @@ class NodeServer(node_pb2_grpc.NodeServiceServicer):
             # Convert byte stream to NumPy array
             input_array = np.frombuffer(input, dtype=np.float32)
             reshaped_input = input_array.reshape(self.input_shape)  # Skip batch dimension if dynamic
+            # reshaped_input = input_array  # Skip batch dimension if dynamic
             print(f"Reshaped input: {reshaped_input.shape}")
 
             # Load the ONNX model and perform the inference
             ort_session = self.ort_session
-            print(f"Model input: {ort_session.get_inputs()[0]}")
             ort_inputs = {ort_session.get_inputs()[0].name: reshaped_input}
 
             # Schedule an inference task

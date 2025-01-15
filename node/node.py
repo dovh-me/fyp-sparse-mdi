@@ -67,7 +67,6 @@ class Node:
 
     async def forward_to_next_node(self, task_id: int, input_tensor):
         # Convert to bytes
-        input_tensor = input_tensor.astype('float32') / 255.0
         input_tensor = input_tensor.tobytes()
 
         if(self.next_node == None):
