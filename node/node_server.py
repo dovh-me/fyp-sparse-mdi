@@ -77,6 +77,7 @@ class NodeServer(node_pb2_grpc.NodeServiceServicer):
                 message=message,
                 task_id=task_id
             )
+
         except Exception as e:
             message = f"[id: {model_part_id}] Inference failed: {str(e)}"
             print(message)

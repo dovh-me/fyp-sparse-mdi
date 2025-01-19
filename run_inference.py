@@ -67,6 +67,8 @@ async def perform_inference(server_address: str, x_test, y_test):
 
 # Entry point
 if __name__ == "__main__":
-    server_address = "127.0.0.1:50051"
+    # Update prior to running the script
+    # server_address = "127.0.0.1:50051"
+    server_address = "192.168.56.101:50051"
     x_test, y_test = load_cifar10()
     asyncio.run(perform_inference(server_address, x_test, y_test))
