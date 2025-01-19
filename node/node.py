@@ -3,7 +3,7 @@ import sys
 import grpc
 import asyncio
 
-from util import status
+from util import status, top_k_sparsify
 
 module_path = os.path.abspath('../')
 sys.path.insert(0, module_path)
@@ -66,6 +66,9 @@ class Node:
         return (updated_model_file_path, self.port)
 
     async def forward_to_next_node(self, task_id: int, input_tensor):
+        # Apply sparsificatoin
+        input_tensor = top_k_sparsify(input_tensor, k=1000) 
+
         # Convert to bytes
         input_tensor = input_tensor.tobytes()
 

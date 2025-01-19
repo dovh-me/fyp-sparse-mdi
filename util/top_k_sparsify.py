@@ -10,10 +10,14 @@ def top_k_sparsify(activations, k):
     :return: Sparse activations and their indices.
     """
     activations_np = activations.detach().cpu().numpy()  # Convert to numpy
+    original_shape = activations_np.shape
     top_k_indices = np.argpartition(np.abs(activations_np), -k, axis=None)[-k:]  # Get top-k indices
     top_k_values = activations_np.flatten()[top_k_indices]  # Get the top-k values
+    total_activations = np.prod(original_shape)
+    reconstructed_activations = np.zeros(total_activations)
+    reconstructed_activations[top_k_indices] = top_k_values
     
-    return top_k_values, top_k_indices
+    return reconstructed_activations.view(original_shape) 
 
 # Example usage of top-k sparsification on output_part1
 # k = 1000  # Retain top 1000 activations
