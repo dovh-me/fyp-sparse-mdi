@@ -2,6 +2,9 @@ import os
 import sys
 import grpc
 import asyncio
+import struct
+import numpy as np
+import zlib
 
 from util import status, top_k_sparsify
 
@@ -65,17 +68,76 @@ class Node:
 
         return (updated_model_file_path, self.port)
 
+    def encode(self, values, indices):
+        """
+        Encode the values and indices for efficient transmission.
+        - No quantization applied; values remain as float32.
+        """
+        # Use float32 for values and int32 for indices
+        values = values.astype(np.float32)
+        delta_indices = np.diff(np.insert(indices, 0, 0)).astype(np.int32)
+
+        return values, delta_indices
+
+    def compress(self, values, indices):
+        """
+        Compress the encoded data using zlib.
+        """
+        # Serialize data for compression
+        serialized_data = struct.pack(f"{len(values)}f", *values) + \
+                          struct.pack(f"{len(indices)}i", *indices)
+        compressed_data = zlib.compress(serialized_data)
+
+        return compressed_data
+
+    def decompress(self, compressed_data):
+        """
+        Decompress the zlib-compressed data.
+        """
+        decompressed_data = zlib.decompress(compressed_data)
+        return decompressed_data
+
+    def decode(self, compressed_data, original_shape):
+        """
+        Decode and reconstruct the sparse tensor from compressed data.
+        """
+        # Decompress the data
+        decompressed_data = self.decompress(compressed_data)
+
+        # Deserialize the values and indices
+        num_values = len(decompressed_data) // 8  # 4 bytes per value + 4 bytes per index
+        values = struct.unpack(f"{num_values}f", decompressed_data[:4 * num_values])
+        indices = struct.unpack(f"{num_values}i", decompressed_data[4 * num_values:])
+
+        # Convert to numpy arrays
+        values = np.array(values, dtype=np.float32)
+        indices = np.cumsum(indices).astype(np.int32)  # Reconstruct original indices
+
+        # Reconstruct the sparse tensor
+        sparse_tensor = np.zeros(np.prod(original_shape), dtype=np.float32)
+        sparse_tensor[indices] = values
+        return sparse_tensor.reshape(original_shape)
+
     async def forward_to_next_node(self, task_id: int, input_tensor):
-        # Apply sparsificatoin
-        input_tensor = top_k_sparsify(input_tensor, k=1000) 
+        # Apply sparsification
+        values, indices = top_k_sparsify(input_tensor, k=1000) 
+
+        
+
+        # Encode values and indices
+        encoded_values, delta_indices = self.encode(values, indices)
+
+        # Compress the encoded data
+        compressed_data = self.compress(encoded_values, delta_indices)
 
         # Convert to bytes
-        input_tensor = input_tensor.tobytes()
+        # input_tensor = input_tensor.tobytes()
 
         if(self.next_node == None):
-            await self.finish_inference(task_id=task_id, result=input_tensor) 
+            await self.finish_inference(task_id=task_id, result=compressed_data) 
             return
         
+        # TODO: Reuse the channel
         async with grpc.aio.insecure_channel(self.next_node) as channel:
             stub = NodeServiceStub(channel)
 

@@ -56,15 +56,20 @@ class NodeServer(node_pb2_grpc.NodeServiceServicer):
             print(f"Inference task received: {task_id}")
             print(f"Input tensor type: {type(input)}, length: {len(input)}")
 
-            # Convert byte stream to NumPy array
-            input_array = np.frombuffer(input, dtype=np.float32)
-            reshaped_input = input_array.reshape(self.input_shape)  # Skip batch dimension if dynamic
-            # reshaped_input = input_array  # Skip batch dimension if dynamic
-            print(f"Reshaped input: {reshaped_input.shape}")
+            # # Convert byte stream to NumPy array
+            # input_array = np.frombuffer(input, dtype=np.float32)
+            # reshaped_input = input_array.reshape(self.input_shape)  # Skip batch dimension if dynamic
+            # # reshaped_input = input_array  # Skip batch dimension if dynamic
+            # print(f"Reshaped input: {reshaped_input.shape}")
+            # Decode and reconstruct the sparse tensor
+            reconstructed_activations = self.node.decode(input, self.input_shape)
+
+            # Convert to torch tensor
+            reconstructed_activations = np.asanyarray(reconstructed_activations, dtype=np.float32)
 
             # Load the ONNX model and perform the inference
             ort_session = self.ort_session
-            ort_inputs = {ort_session.get_inputs()[0].name: reshaped_input}
+            ort_inputs = {ort_session.get_inputs()[0].name: reconstructed_activations}
 
             # Schedule an inference task
             task = self.async_inference(task_id=task_id, ort_inputs=ort_inputs)

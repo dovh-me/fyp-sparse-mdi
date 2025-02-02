@@ -3,21 +3,20 @@ import numpy as np
 # Function to apply top-k sparsification on activations
 def top_k_sparsify(activations, k):
     """
-    Apply top-k sparsification to activation vectors.
-    
-    :param activations: Activation vector (PyTorch tensor).
-    :param k: Number of top-k values to retain.
-    :return: Sparse activations and their indices.
+    Create a sparse tensor by keeping only the top-k values.
     """
-    activations_np = activations.detach().cpu().numpy()  # Convert to numpy
-    original_shape = activations_np.shape
-    top_k_indices = np.argpartition(np.abs(activations_np), -k, axis=None)[-k:]  # Get top-k indices
-    top_k_values = activations_np.flatten()[top_k_indices]  # Get the top-k values
-    total_activations = np.prod(original_shape)
-    reconstructed_activations = np.zeros(total_activations)
-    reconstructed_activations[top_k_indices] = top_k_values
-    
-    return reconstructed_activations.view(original_shape) 
+    activations_np = activations.detach().cpu().numpy().flatten()
+    k = min(k, activations_np.size)
+
+    top_k_indices = np.argpartition(np.abs(activations_np), -k)[-k:]
+    top_k_values = activations_np[top_k_indices]
+
+    # Sort by magnitude for stable results
+    sorted_indices = np.argsort(np.abs(top_k_values))
+    top_k_values = top_k_values[sorted_indices]
+    top_k_indices = top_k_indices[sorted_indices]
+
+    return top_k_values, top_k_indices
 
 # Example usage of top-k sparsification on output_part1
 # k = 1000  # Retain top 1000 activations

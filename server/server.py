@@ -156,6 +156,9 @@ class Server(server_pb2_grpc.ServerServicer):
                 node_stub = node_pb2_grpc.NodeServiceStub(channel)
 
                 # Convert the input to a bytes stream
+
+                
+
                 request = node_pb2.InferenceRequest(input_tensor=input_tensor) 
                 response: node_pb2.InferenceResponse = await node_stub.Infer(request)
 
