@@ -11,6 +11,7 @@ from util import status, top_k_sparsify
 module_path = os.path.abspath('../')
 sys.path.insert(0, module_path)
 
+from modules.EncoderDecoder import EncoderDecoderManager
 from node.node_server import main as serve
 from generated.node_pb2 import InferenceRequest, InferenceResponse
 from generated.node_pb2_grpc import NodeServiceStub
@@ -28,6 +29,7 @@ class Node:
         self.next_node = None
         self.model_part_id = None
         self.port = None
+        self.encoderDecoder = EncoderDecoderManager()
 
 
     async def register(self, stub: ServerStub):
@@ -68,73 +70,23 @@ class Node:
 
         return (updated_model_file_path, self.port)
 
-    def encode(self, values, indices):
-        """
-        Encode the values and indices for efficient transmission.
-        - No quantization applied; values remain as float32.
-        """
-        # Use float32 for values and int32 for indices
-        values = values.astype(np.float32)
-        delta_indices = np.diff(np.insert(indices, 0, 0)).astype(np.int32)
-
-        return values, delta_indices
-
-    def compress(self, values, indices):
-        """
-        Compress the encoded data using zlib.
-        """
-        # Serialize data for compression
-        serialized_data = struct.pack(f"{len(values)}f", *values) + \
-                          struct.pack(f"{len(indices)}i", *indices)
-        compressed_data = zlib.compress(serialized_data)
-
-        return compressed_data
-
-    def decompress(self, compressed_data):
-        """
-        Decompress the zlib-compressed data.
-        """
-        decompressed_data = zlib.decompress(compressed_data)
-        return decompressed_data
-
-    def decode(self, compressed_data, original_shape):
-        """
-        Decode and reconstruct the sparse tensor from compressed data.
-        """
-        # Decompress the data
-        decompressed_data = self.decompress(compressed_data)
-
-        # Deserialize the values and indices
-        num_values = len(decompressed_data) // 8  # 4 bytes per value + 4 bytes per index
-        values = struct.unpack(f"{num_values}f", decompressed_data[:4 * num_values])
-        indices = struct.unpack(f"{num_values}i", decompressed_data[4 * num_values:])
-
-        # Convert to numpy arrays
-        values = np.array(values, dtype=np.float32)
-        indices = np.cumsum(indices).astype(np.int32)  # Reconstruct original indices
-
-        # Reconstruct the sparse tensor
-        sparse_tensor = np.zeros(np.prod(original_shape), dtype=np.float32)
-        sparse_tensor[indices] = values
-        return sparse_tensor.reshape(original_shape)
-
     async def forward_to_next_node(self, task_id: int, input_tensor):
         # Apply sparsification
-        values, indices = top_k_sparsify(input_tensor, k=1000) 
+        # values, indices = top_k_sparsify(input_tensor, k=1000) 
 
-        
+        # # Encode values and indices
+        # encoded_values, delta_indices = self.encode(values, indices)
 
-        # Encode values and indices
-        encoded_values, delta_indices = self.encode(values, indices)
+        # # Compress the encoded data
+        # compressed_data = self.compress(encoded_values, delta_indices)
 
-        # Compress the encoded data
-        compressed_data = self.compress(encoded_values, delta_indices)
-
-        # Convert to bytes
+        # # Convert to bytes
         # input_tensor = input_tensor.tobytes()
 
+        tensor = self.encoderDecoder.encode('sparse', input_tensor)
+
         if(self.next_node == None):
-            await self.finish_inference(task_id=task_id, result=compressed_data) 
+            await self.finish_inference(task_id=task_id, result=tensor) 
             return
         
         # TODO: Reuse the channel
@@ -144,7 +96,7 @@ class Node:
             request = InferenceRequest(
                 # next_model_part_id=self.model_part_id+1, # This is not ideal
                 task_id= task_id, 
-                input_tensor=input_tensor
+                input_tensor=tensor
             )
 
             message = f"[{task_id}]: Forwarding task to next node; {self.next_node}"
@@ -165,10 +117,8 @@ class Node:
             response = await stub.EndInference(request)
             
             if(response.status_code != status.INFERENCE_END_ACCEPTED):
-                message = f"There was an error finalising the inference end, {response.status_code}" 
+                message = f"There was an error finalizing the inference end, {response.status_code}" 
 
-
-    
 async def main():
     try: 
         print(f'Initializing node...')
@@ -192,12 +142,10 @@ async def main():
             # Could be an issue - verify
             print(f'Informing node is ready {node.model_part_id}')
             readyRequest = ReadyRequest(port=port)
-            inform_ready_async = await stub.InformReady(readyRequest)
+            await stub.InformReady(readyRequest)
 
-            # # TODO : This is not an idea approach.. please check for better solutions
-            await asyncio.gather(server_start_async, 
-                        #    inform_ready_async
-                           )
+            # # TODO : This is not an ideal approach.. please check for better solutions
+            await asyncio.gather(server_start_async)
             
     except RuntimeError as e:
         print("Couldn't initialise the node")
@@ -205,4 +153,4 @@ async def main():
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())

@@ -47,9 +47,10 @@ async def perform_inference(server_address: str, x_test, y_test):
                     print(response.message)
                     continue
 
-                result_shape = (1,10)
-                input_array = np.frombuffer(response.result, dtype=np.float32)
-                predicted = np.argmax(input_array)  # Assume result is a probability distribution
+                result_shape = [1,10]
+                result_array = np.frombuffer(response.result, dtype=np.float64)
+                result_array = result_array.reshape(result_shape)
+                predicted = np.argmax(result_array)  # Assume result is a probability distribution
 
                 if tf.equal(np.array(predicted), label):
                     correct_predictions += 1
