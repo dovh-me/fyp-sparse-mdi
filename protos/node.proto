@@ -3,6 +3,7 @@ syntax = "proto3";
 service NodeService {
     rpc Infer (InferenceRequest) returns (InferenceResponse);
     rpc UpdateNextNode(UpdateNextNodeRequest) returns (UpdateNextNodeResponse);
+    rpc GetInferenceMetrics(NodeInferenceMetricsRequest) returns (NodeInferenceMetricsResponse);
 }
 
 message InferenceRequest {
@@ -16,6 +17,15 @@ message InferenceResponse {
    string message = 2;
    int32 task_id = 3;
    int32 current_model_part_id = 4; 
+}
+
+message NodeInferenceMetricsRequest { }
+
+message NodeInferenceMetricsResponse {
+    int32 values_bytes = 1;
+    int32 indices_bytes = 2;
+    int32 ingress_bytes = 3;
+    int32 egress_bytes = 4;
 }
 
 message UpdateNextNodeRequest {

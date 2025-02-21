@@ -66,6 +66,12 @@ async def perform_inference(server_address: str, x_test, y_test):
         accuracy = correct_predictions / total_predictions
         print(f"Accuracy: {accuracy:.2%}")
 
+        # Call the GetInferenceMetrics rpc on each node
+        metrics_request = server_pb2.InferenceMetricsRequest()
+        response: server_pb2.InferenceMetricsResponse = await stub.GetInferenceMetrics(metrics_request)
+        print(f"total egress_bytes: {response.egress_bytes}B")
+        print(f"As Mega Bytes: {response.egress_bytes/(1000*1000)}MB")
+
 # Entry point
 if __name__ == "__main__":
     # Update prior to running the script

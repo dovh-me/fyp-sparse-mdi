@@ -77,3 +77,19 @@ class RegisterResponse(_message.Message):
     port: int
     chunk: bytes
     def __init__(self, status_code: _Optional[int] = ..., message: _Optional[str] = ..., first_node: _Optional[str] = ..., prev_node: _Optional[str] = ..., model_part_id: _Optional[str] = ..., port: _Optional[int] = ..., chunk: _Optional[bytes] = ...) -> None: ...
+
+class InferenceMetricsRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class InferenceMetricsResponse(_message.Message):
+    __slots__ = ("ingress_bytes", "egress_bytes", "values_bytes", "indices_bytes")
+    INGRESS_BYTES_FIELD_NUMBER: _ClassVar[int]
+    EGRESS_BYTES_FIELD_NUMBER: _ClassVar[int]
+    VALUES_BYTES_FIELD_NUMBER: _ClassVar[int]
+    INDICES_BYTES_FIELD_NUMBER: _ClassVar[int]
+    ingress_bytes: int
+    egress_bytes: int
+    values_bytes: int
+    indices_bytes: int
+    def __init__(self, ingress_bytes: _Optional[int] = ..., egress_bytes: _Optional[int] = ..., values_bytes: _Optional[int] = ..., indices_bytes: _Optional[int] = ...) -> None: ...

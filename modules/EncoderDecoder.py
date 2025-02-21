@@ -49,7 +49,7 @@ class SparseEncoding(EncodingStrategy):
         shape = tensor.shape
         shape_size = len(shape)
         
-        values, flat_indices = self.top_k_sparsify(tensor, k=1000)
+        values, flat_indices = self.top_k_sparsify(tensor, k=5000)
         num_elements = len(values)  # Explicitly store number of nonzero elements
 
         packed_shape = struct.pack(f"{shape_size}I", *shape)

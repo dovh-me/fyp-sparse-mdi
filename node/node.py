@@ -2,11 +2,8 @@ import os
 import sys
 import grpc
 import asyncio
-import struct
-import numpy as np
-import zlib
 
-from util import status, top_k_sparsify
+from util import status
 
 module_path = os.path.abspath('../')
 sys.path.insert(0, module_path)
@@ -30,6 +27,10 @@ class Node:
         self.model_part_id = None
         self.port = None
         self.encoderDecoder = EncoderDecoderManager()
+        self.values_bytes_transferred = 0
+        self.indices_bytes_transferred = 0
+        self.ingress_bytes = 0
+        self.egress_bytes = 0
 
 
     async def register(self, stub: ServerStub):
@@ -71,19 +72,10 @@ class Node:
         return (updated_model_file_path, self.port)
 
     async def forward_to_next_node(self, task_id: int, input_tensor):
-        # Apply sparsification
-        # values, indices = top_k_sparsify(input_tensor, k=1000) 
+        tensor = self.encoderDecoder.encode('huffman', input_tensor)
 
-        # # Encode values and indices
-        # encoded_values, delta_indices = self.encode(values, indices)
-
-        # # Compress the encoded data
-        # compressed_data = self.compress(encoded_values, delta_indices)
-
-        # # Convert to bytes
-        # input_tensor = input_tensor.tobytes()
-
-        tensor = self.encoderDecoder.encode('sparse', input_tensor)
+        # Update egress metrics
+        self.update_egress_metrics(tensor)
 
         if(self.next_node == None):
             await self.finish_inference(task_id=task_id, result=tensor) 
@@ -118,6 +110,21 @@ class Node:
             
             if(response.status_code != status.INFERENCE_END_ACCEPTED):
                 message = f"There was an error finalizing the inference end, {response.status_code}" 
+                print(message)
+
+    def update_ingress_metrics(self, bytes):
+        self.ingress_bytes += len(bytes)
+
+    def update_egress_metrics(self, bytes):
+        self.egress_bytes += len(bytes)
+
+    def get_inference_metrics(self):
+        return {
+            'values': self.values_bytes_transferred,
+            'indices': self.indices_bytes_transferred,
+            'ingress': self.ingress_bytes,
+            'egress': self.egress_bytes
+        }
 
 async def main():
     try: 
@@ -144,7 +151,7 @@ async def main():
             readyRequest = ReadyRequest(port=port)
             await stub.InformReady(readyRequest)
 
-            # # TODO : This is not an ideal approach.. please check for better solutions
+            # TODO : This is not an ideal approach.. please check for better solutions
             await asyncio.gather(server_start_async)
             
     except RuntimeError as e:

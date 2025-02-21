@@ -3,3 +3,5 @@ onnx
 onnxruntime
 grpcio
 grpcio-tools
+grpcio-observability
+opentelemetry-sdk

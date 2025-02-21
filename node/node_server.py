@@ -4,8 +4,12 @@ import grpc
 import onnxruntime as ort
 
 import generated.node_pb2 as node_pb2
+NodeInferenceMetricsResponse = node_pb2.NodeInferenceMetricsResponse
+NodeInferenceMetricsRequest =  node_pb2.NodeInferenceMetricsRequest
+
 import generated.node_pb2_grpc as node_pb2_grpc
-from util import to_numpy, status
+
+from util import status
 import traceback
 import numpy as np
 
@@ -30,7 +34,15 @@ class NodeServer(node_pb2_grpc.NodeServiceServicer):
 
         super().__init__()
 
+    async def GetInferenceMetrics(self, request: NodeInferenceMetricsRequest, context: grpc.RpcContext) -> NodeInferenceMetricsResponse:
+       inference_metrics = self.node.get_inference_metrics()
 
+       return node_pb2.NodeInferenceMetricsResponse(
+           values_bytes=inference_metrics['values'],
+           indices_bytes=inference_metrics['indices'], 
+           ingress_bytes=inference_metrics['ingress'], 
+           egress_bytes=inference_metrics['egress']
+        )
      
     async def Infer(self, request: node_pb2.InferenceRequest, context: grpc.RpcContext):
         """
@@ -56,16 +68,11 @@ class NodeServer(node_pb2_grpc.NodeServiceServicer):
             print(f"Inference task received: {task_id}")
             print(f"Input tensor type: {type(input)}, length: {len(input)}")
 
-            # # Convert byte stream to NumPy array
-            # input_array = np.frombuffer(input, dtype=np.float32)
-            # reshaped_input = input_array.reshape(self.input_shape)  # Skip batch dimension if dynamic
-            # # reshaped_input = input_array  # Skip batch dimension if dynamic
-            # print(f"Reshaped input: {reshaped_input.shape}")
-            # Decode and reconstruct the sparse tensor
-            # reconstructed_activations = self.node.decode(input, self.input_shape)
+            # MOVE ALL OF THESE TO node.py
+            # Update ingress metrics
+            self.node.update_ingress_metrics(input)
 
             # Convert to torch tensor
-            # reconstructed_activations = np.asanyarray(reconstructed_activations, dtype=np.float32)
             reconstructed_activations = self.node.encoderDecoder.decode(input)
 
             # Load the ONNX model and perform the inference
@@ -75,6 +82,7 @@ class NodeServer(node_pb2_grpc.NodeServiceServicer):
             # Schedule an inference task
             task = self.async_inference(task_id=task_id, ort_inputs=ort_inputs)
             asyncio.create_task(task)
+            # ---------- ----------
 
             message = f"[id:{model_part_id}] Inference accepted for task_id: {task_id}"
 

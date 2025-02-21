@@ -239,10 +239,28 @@ class Server(server_pb2_grpc.ServerServicer):
             await self.send_for_inference(inference_task)
             self.inference_queue.task_done()  # Mark the task as done
 
+    async def GetInferenceMetrics(self, request, context):
+        print(f"NodeServer: Inference request received")
+        egress_bytes= 0
+        for node_ip in self.node_registry:
+            metrics_task = await self.get_inference_metrics_from_node(node_ip=node_ip)
+            egress_bytes += metrics_task.egress_bytes
+            print(f"{node_ip}: {egress_bytes}B")
+        
+        return server_pb2.InferenceMetricsResponse(egress_bytes=egress_bytes)
+    
+    async def get_inference_metrics_from_node(self, node_ip) -> node_pb2.NodeInferenceMetricsResponse:
+        async with grpc.aio.insecure_channel(node_ip) as channel:
+            stub = node_pb2_grpc.NodeServiceStub(channel)
+            request = node_pb2.NodeInferenceMetricsRequest()
+            response = await stub.GetInferenceMetrics(request)
+            return response
+
     async def run(self):
         """Start the gRPC server and inference queue processing."""
         # Start the inference queue processor as a background task
         await self.process_inference_queue()
+        
 
     async def send_for_inference(self, inference_task: InferenceTask):
         try:
