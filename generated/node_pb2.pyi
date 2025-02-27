@@ -55,3 +55,11 @@ class UpdateNextNodeResponse(_message.Message):
     status_code: int
     message: str
     def __init__(self, status_code: _Optional[int] = ..., message: _Optional[str] = ...) -> None: ...
+
+class PingRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class PingResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...

@@ -36,7 +36,8 @@ async def perform_inference(server_address: str, x_test, y_test):
         total_predictions = len(test_dataset)
 
         print("Starting inference...")
-        for image, label in tqdm(test_dataset, total=total_predictions, desc="Inference Progress"):
+        inference_iterator = tqdm(test_dataset, total=total_predictions, desc="Inference Progress")
+        for image, label in inference_iterator:
             input_tensor = image.numpy().tobytes()
             request = server_pb2.StartInferenceRequest(input_tensor=input_tensor)
             
@@ -71,6 +72,7 @@ async def perform_inference(server_address: str, x_test, y_test):
         response: server_pb2.InferenceMetricsResponse = await stub.GetInferenceMetrics(metrics_request)
         print(f"total egress_bytes: {response.egress_bytes}B")
         print(f"As Mega Bytes: {response.egress_bytes/(1000*1000)}MB")
+        print(f"Time elapsed: {inference_iterator.format_dict['elapsed']}s")
 
 # Entry point
 if __name__ == "__main__":

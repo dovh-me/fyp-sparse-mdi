@@ -64,6 +64,11 @@ class ServerStub(object):
                 request_serializer=server__pb2.InferenceMetricsRequest.SerializeToString,
                 response_deserializer=server__pb2.InferenceMetricsResponse.FromString,
                 _registered_method=True)
+        self.Ping = channel.unary_unary(
+                '/Server/Ping',
+                request_serializer=server__pb2.ServerPingRequest.SerializeToString,
+                response_deserializer=server__pb2.ServerPingResponse.FromString,
+                _registered_method=True)
 
 
 class ServerServicer(object):
@@ -105,6 +110,12 @@ class ServerServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Ping(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ServerServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -137,6 +148,11 @@ def add_ServerServicer_to_server(servicer, server):
                     servicer.GetInferenceMetrics,
                     request_deserializer=server__pb2.InferenceMetricsRequest.FromString,
                     response_serializer=server__pb2.InferenceMetricsResponse.SerializeToString,
+            ),
+            'Ping': grpc.unary_unary_rpc_method_handler(
+                    servicer.Ping,
+                    request_deserializer=server__pb2.ServerPingRequest.FromString,
+                    response_serializer=server__pb2.ServerPingResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -301,6 +317,33 @@ class Server(object):
             '/Server/GetInferenceMetrics',
             server__pb2.InferenceMetricsRequest.SerializeToString,
             server__pb2.InferenceMetricsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Ping(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/Server/Ping',
+            server__pb2.ServerPingRequest.SerializeToString,
+            server__pb2.ServerPingResponse.FromString,
             options,
             channel_credentials,
             insecure,

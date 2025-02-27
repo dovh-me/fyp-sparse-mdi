@@ -93,3 +93,11 @@ class InferenceMetricsResponse(_message.Message):
     values_bytes: int
     indices_bytes: int
     def __init__(self, ingress_bytes: _Optional[int] = ..., egress_bytes: _Optional[int] = ..., values_bytes: _Optional[int] = ..., indices_bytes: _Optional[int] = ...) -> None: ...
+
+class ServerPingRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class ServerPingResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
