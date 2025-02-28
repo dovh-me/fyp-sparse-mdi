@@ -209,10 +209,10 @@ class Node:
         self.connection.set_result(channel)
         logger.log("Channel initialized")
 
-async def main():
+async def main(coordinator_ip="127.0.0.1:50051"):
     try: 
         print(f'Initializing node...')
-        node = Node(coordinator_address="127.0.0.1:50051", node_ip="")
+        node = Node(coordinator_address=coordinator_ip, node_ip="")
 
         async with grpc.aio.insecure_channel(node.coordinator_address) as channel:
             stub = ServerStub(channel)
