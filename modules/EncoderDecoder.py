@@ -1,6 +1,16 @@
-from typing import Dict, Type
+from typing import Dict
 import struct
 import numpy as np
+
+import os
+import sys
+
+module_path = os.path.abspath('../')
+sys.path.insert(0, module_path)
+
+from modules.NetworkObservabilityTracker import NetworkObservabilityTracker
+from modules.SparsityEngine import SparsityEngine
+from util.logger import logger
 
 # Base Encoding Strategy
 class EncodingStrategy:
@@ -28,6 +38,11 @@ class HuffmanEncoding(EncodingStrategy):
 
 # Sparse Encoding Strategy using struct
 class SparseEncoding(EncodingStrategy):
+    def __init__(self, network_observer):
+        super().__init__()
+        self.sparsity_engine = SparsityEngine(network_observer=network_observer)
+        self.network_observer: NetworkObservabilityTracker = network_observer
+
     def top_k_sparsify(self, activations, k):
         """
         Create a sparse tensor by keeping only the top-k values.
@@ -46,10 +61,14 @@ class SparseEncoding(EncodingStrategy):
         return top_k_values, top_k_indices
 
     def encode(self, tensor: np.ndarray) -> bytes:
+        sparsity_level = self.sparsity_engine.compute_tensor_sparsity(tensor) 
+        k = int(round(tensor.size - (tensor.size * sparsity_level), 0))
+        logger.log(f"k: {k} | sparsity_level: {sparsity_level}")
+
         shape = tensor.shape
         shape_size = len(shape)
         
-        values, flat_indices = self.top_k_sparsify(tensor, k=5000)
+        values, flat_indices = self.top_k_sparsify(tensor, k=k)
         num_elements = len(values)  # Explicitly store number of nonzero elements
 
         packed_shape = struct.pack(f"{shape_size}I", *shape)
@@ -78,10 +97,11 @@ class SparseEncoding(EncodingStrategy):
 
 # Encoder-Decoder Manager
 class EncoderDecoderManager:
-    def __init__(self):
+    def __init__(self, network_observer: NetworkObservabilityTracker):
+        self.network_observer = network_observer
         self.strategies: Dict[str, EncodingStrategy] = {}
         self.register_strategy('huffman', HuffmanEncoding())
-        self.register_strategy('sparse', SparseEncoding())
+        self.register_strategy('sparse', SparseEncoding(network_observer=network_observer))
     
     def register_strategy(self, name: str, strategy: EncodingStrategy):
         self.strategies[name] = strategy

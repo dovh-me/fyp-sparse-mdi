@@ -2,22 +2,21 @@ import sys
 import os
 import asyncio
 import multiprocessing 
-import time
-
-from util import status, logger
+from concurrent import futures
+import grpc
+import traceback
+import numpy as np
 
 module_path = os.path.abspath('../')
 sys.path.insert(0, module_path)
 
-from concurrent import futures
-import grpc
 import generated.server_pb2 as server_pb2
 import generated.server_pb2_grpc as server_pb2_grpc
 import generated.node_pb2 as node_pb2
 import generated.node_pb2_grpc as node_pb2_grpc
-import traceback
-import numpy as np
 from modules.EncoderDecoder import EncoderDecoderManager
+from modules.NetworkObservabilityTracker import NetworkObservabilityTracker
+from util import status, logger
 
 node_ports = 50052
 
@@ -41,7 +40,8 @@ class Server(server_pb2_grpc.ServerServicer):
         self.inference_queue = asyncio.Queue()
         self.network_ready_future = asyncio.Future()
         self.node_config = node_config 
-        self.encoderDecoder = EncoderDecoderManager()
+        self.network_observer = NetworkObservabilityTracker()
+        self.encoderDecoder = EncoderDecoderManager(network_observer=self.network_observer)
         self.PROCESSES = multiprocessing.cpu_count() - 1
 
         # Download the model parts zip

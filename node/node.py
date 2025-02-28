@@ -12,6 +12,7 @@ logger = logger.logger
 module_path = os.path.abspath('../')
 sys.path.insert(0, module_path)
 
+from modules.SparsityEngine import SparsityEngine
 from modules.EncoderDecoder import EncoderDecoderManager
 from modules.NetworkObservabilityTracker import NetworkObservabilityTracker
 from node.node_server import main as serve
@@ -35,11 +36,11 @@ class Node:
         self.prev_node = None                           # Predecessor node
         self.model_part_id = None
         self.port = None
-        self.encoderDecoder = EncoderDecoderManager()
         self.network_observability = NetworkObservabilityTracker()
+        self.encoderDecoder = EncoderDecoderManager(network_observer=self.network_observability)
         self.connection = asyncio.Future() 
         self.next_node = asyncio.Future() 
-        self.encoding_strategy = "huffman"
+        self.encoding_strategy = "sparse"
 
     async def register(self, stub: ServerStub):
         """
@@ -119,13 +120,13 @@ class Node:
         connection = await self.connection 
         next_node = await self.next_node
 
-        logger.log(f"Forwarding to next node {next_node}")
-
+        # Encode the output tensor
         tensor = self.encoderDecoder.encode(self.encoding_strategy, input_tensor)
 
         # Update egress metrics
         self.network_observability.update_egress_metrics(tensor)
 
+        logger.log(f"Forwarding to next node {next_node}")
         if(next_node == None or next_node == ""):
             await self.finish_inference(task_id=task_id, result=tensor) 
             print(f"Inference complete {task_id}")
@@ -162,7 +163,9 @@ class Node:
             message = f"There was an error finalizing the inference end, {response.status_code}" 
             logger.log(message)
 
-    async def ping_in_background(self, ping_timeout: int = 3000):
+    async def ping_in_background(self, ping_timeout: int = 3):
+        await self.ping_next_node()
+
         while True:
             await asyncio.sleep(ping_timeout)
             await self.ping_next_node()
@@ -171,8 +174,9 @@ class Node:
         next_node = await self.next_node
         connection = await self.connection
         
-        start_time = time.time()
-        if(next_node == None):
+        start_time = time.time_ns()
+
+        if(next_node == None or next_node == ''):
             # Send the ping request to server stub
             stub = ServerStub(connection)
             request = ServerPingRequest()
@@ -184,8 +188,9 @@ class Node:
             request = PingRequest()
             await stub.Ping(request)
 
-        end_time = time.time()
-        rtt = start_time - end_time
+        end_time = time.time_ns()
+        rtt = (end_time - start_time) /1000_000 # Convert to milliseconds
+        logger.log(f"RTT updated: {rtt}ms")
 
         self.network_observability.update_rtt_with_next_node(rtt=rtt)
 
@@ -243,6 +248,7 @@ async def main():
 
             # Start the ping in background
             # Assuming fire and forget in create_task
+            logger.log('Starting ping task')
             await asyncio.create_task(node.ping_in_background())
             logger.log('Started ping task in the background')
 
