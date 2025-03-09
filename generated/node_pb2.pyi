@@ -26,6 +26,22 @@ class InferenceResponse(_message.Message):
     current_model_part_id: int
     def __init__(self, status_code: _Optional[int] = ..., message: _Optional[str] = ..., task_id: _Optional[int] = ..., current_model_part_id: _Optional[int] = ...) -> None: ...
 
+class NodeInferenceMetricsRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class NodeInferenceMetricsResponse(_message.Message):
+    __slots__ = ("values_bytes", "indices_bytes", "ingress_bytes", "egress_bytes")
+    VALUES_BYTES_FIELD_NUMBER: _ClassVar[int]
+    INDICES_BYTES_FIELD_NUMBER: _ClassVar[int]
+    INGRESS_BYTES_FIELD_NUMBER: _ClassVar[int]
+    EGRESS_BYTES_FIELD_NUMBER: _ClassVar[int]
+    values_bytes: int
+    indices_bytes: int
+    ingress_bytes: int
+    egress_bytes: int
+    def __init__(self, values_bytes: _Optional[int] = ..., indices_bytes: _Optional[int] = ..., ingress_bytes: _Optional[int] = ..., egress_bytes: _Optional[int] = ...) -> None: ...
+
 class UpdateNextNodeRequest(_message.Message):
     __slots__ = ("next_node",)
     NEXT_NODE_FIELD_NUMBER: _ClassVar[int]
@@ -39,3 +55,11 @@ class UpdateNextNodeResponse(_message.Message):
     status_code: int
     message: str
     def __init__(self, status_code: _Optional[int] = ..., message: _Optional[str] = ...) -> None: ...
+
+class PingRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class PingResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...

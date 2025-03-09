@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nnode.proto\"U\n\x10InferenceRequest\x12\x1a\n\x12next_model_part_id\x18\x01 \x01(\x05\x12\x0f\n\x07task_id\x18\x02 \x01(\x05\x12\x14\n\x0cinput_tensor\x18\x03 \x01(\x0c\"i\n\x11InferenceResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x0f\n\x07task_id\x18\x03 \x01(\x05\x12\x1d\n\x15\x63urrent_model_part_id\x18\x04 \x01(\x05\"*\n\x15UpdateNextNodeRequest\x12\x11\n\tnext_node\x18\x01 \x01(\t\">\n\x16UpdateNextNodeResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t2\x80\x01\n\x0bNodeService\x12.\n\x05Infer\x12\x11.InferenceRequest\x1a\x12.InferenceResponse\x12\x41\n\x0eUpdateNextNode\x12\x16.UpdateNextNodeRequest\x1a\x17.UpdateNextNodeResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nnode.proto\"U\n\x10InferenceRequest\x12\x1a\n\x12next_model_part_id\x18\x01 \x01(\x05\x12\x0f\n\x07task_id\x18\x02 \x01(\x05\x12\x14\n\x0cinput_tensor\x18\x03 \x01(\x0c\"i\n\x11InferenceResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x0f\n\x07task_id\x18\x03 \x01(\x05\x12\x1d\n\x15\x63urrent_model_part_id\x18\x04 \x01(\x05\"\x1d\n\x1bNodeInferenceMetricsRequest\"x\n\x1cNodeInferenceMetricsResponse\x12\x14\n\x0cvalues_bytes\x18\x01 \x01(\x05\x12\x15\n\rindices_bytes\x18\x02 \x01(\x05\x12\x15\n\ringress_bytes\x18\x03 \x01(\x05\x12\x14\n\x0c\x65gress_bytes\x18\x04 \x01(\x05\"*\n\x15UpdateNextNodeRequest\x12\x11\n\tnext_node\x18\x01 \x01(\t\">\n\x16UpdateNextNodeResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\"\r\n\x0bPingRequest\"\x0e\n\x0cPingResponse2\xf9\x01\n\x0bNodeService\x12.\n\x05Infer\x12\x11.InferenceRequest\x1a\x12.InferenceResponse\x12\x41\n\x0eUpdateNextNode\x12\x16.UpdateNextNodeRequest\x1a\x17.UpdateNextNodeResponse\x12R\n\x13GetInferenceMetrics\x12\x1c.NodeInferenceMetricsRequest\x1a\x1d.NodeInferenceMetricsResponse\x12#\n\x04Ping\x12\x0c.PingRequest\x1a\r.PingResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -35,10 +35,18 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_INFERENCEREQUEST']._serialized_end=99
   _globals['_INFERENCERESPONSE']._serialized_start=101
   _globals['_INFERENCERESPONSE']._serialized_end=206
-  _globals['_UPDATENEXTNODEREQUEST']._serialized_start=208
-  _globals['_UPDATENEXTNODEREQUEST']._serialized_end=250
-  _globals['_UPDATENEXTNODERESPONSE']._serialized_start=252
-  _globals['_UPDATENEXTNODERESPONSE']._serialized_end=314
-  _globals['_NODESERVICE']._serialized_start=317
-  _globals['_NODESERVICE']._serialized_end=445
+  _globals['_NODEINFERENCEMETRICSREQUEST']._serialized_start=208
+  _globals['_NODEINFERENCEMETRICSREQUEST']._serialized_end=237
+  _globals['_NODEINFERENCEMETRICSRESPONSE']._serialized_start=239
+  _globals['_NODEINFERENCEMETRICSRESPONSE']._serialized_end=359
+  _globals['_UPDATENEXTNODEREQUEST']._serialized_start=361
+  _globals['_UPDATENEXTNODEREQUEST']._serialized_end=403
+  _globals['_UPDATENEXTNODERESPONSE']._serialized_start=405
+  _globals['_UPDATENEXTNODERESPONSE']._serialized_end=467
+  _globals['_PINGREQUEST']._serialized_start=469
+  _globals['_PINGREQUEST']._serialized_end=482
+  _globals['_PINGRESPONSE']._serialized_start=484
+  _globals['_PINGRESPONSE']._serialized_end=498
+  _globals['_NODESERVICE']._serialized_start=501
+  _globals['_NODESERVICE']._serialized_end=750
 # @@protoc_insertion_point(module_scope)

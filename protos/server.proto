@@ -6,6 +6,8 @@ service Server {
     rpc InformReady(ReadyRequest) returns (ReadyRequest);
     rpc StartInference(StartInferenceRequest) returns (StartInferenceResponse);
     rpc EndInference(EndInferenceRequest) returns (EndInferenceResponse);
+    rpc GetInferenceMetrics(InferenceMetricsRequest) returns (InferenceMetricsResponse);
+    rpc Ping(ServerPingRequest) returns (ServerPingResponse);
 }
 
 message Test {}
@@ -52,3 +54,15 @@ message RegisterResponse {
     int32 port = 7;
     bytes chunk = 8; // Chunk of the model file
 }
+
+message InferenceMetricsRequest { }
+
+message InferenceMetricsResponse {
+    int32 ingress_bytes = 1;
+    int32 egress_bytes = 2;
+    int32 values_bytes = 3;
+    int32 indices_bytes = 4;
+}
+
+message ServerPingRequest {}
+message ServerPingResponse {}
