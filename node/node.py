@@ -40,7 +40,7 @@ class Node:
         self.encoderDecoder = EncoderDecoderManager(network_observer=self.network_observability)
         self.connection = asyncio.Future() 
         self.next_node = asyncio.Future() 
-        self.encoding_strategy = "sparse"
+        self.encoding_strategy = "adaptive"
 
     async def register(self, stub: ServerStub):
         """
