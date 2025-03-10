@@ -12,7 +12,7 @@ from dataclasses import dataclass
 @dataclass
 class SparsityEngineDefaults:
     min_sparsity = 0.2
-    max_sparsity = 0.8
+    max_sparsity = 0.7
     min_rtt = 8 # in ms
     max_rtt = min_rtt + 2
     min_pl = 0.01 # in % (0-1)
@@ -40,7 +40,7 @@ class SparsityEngine:
         """
         non_zero_elements = np.count_nonzero(tensor == 0)
         total_elements = tensor.size
-        return non_zero_elements, non_zero_elements / total_elements if total_elements > 0 else 0
+        return non_zero_elements, 1 - (non_zero_elements / total_elements)
     
     def get_rtt(self):
         network_metrics = self.network_observer.get_rtt()
@@ -67,7 +67,22 @@ class SparsityEngine:
         """
         defaults = self.defaults
         max_sparsity = defaults.max_sparsity
-        min_sparsity = defaults.min_sparsity
+
+        # Compute Tensor Sparsity
+        non_zero_elements, sparsity_level = self.compute_tensor_sparsity(inference_tensor)
+
+        network_factor = self.compute_network_factor()
+        k = non_zero_elements * network_factor 
+        min_k = non_zero_elements * max_sparsity
+
+        k = max(min_k, k)
+
+        logger.log(f"rtt: {self.network_observer.rtt} sparsity_level: {sparsity_level} k: {k}")
+
+        return k, sparsity_level
+
+    def compute_network_factor(self):
+        defaults = self.defaults
         rtt_factor = defaults.rtt_factor
         pl_factor = defaults.pl_factor
 
@@ -75,19 +90,5 @@ class SparsityEngine:
         rtt_norm = self.get_rtt()
         rtt_norm = 1 if rtt_norm <= 0 else rtt_norm
 
-        pl_norm = self.get_pl() 
-
-        # Compute Tensor Sparsity
-        non_zero_elements, non_zero_elements_ratio = self.compute_tensor_sparsity(inference_tensor)
-
-        # Compute Adaptive Sparsity Level
-        # network_penalty = min(1.0, (rtt / 100.0) + (packet_loss * 10))  # Normalize impact
-        # adaptive_sparsity = min_sparsity + (max_sparsity - min_sparsity) * (1 - network_penalty)
-        # adaptive_sparsity = max(min_sparsity, min(max_sparsity, adaptive_sparsity + tensor_sparsity))
-
-        non_zero_level = non_zero_elements_ratio * ((rtt_factor * rtt_norm) + (pl_factor * pl_norm))
-        non_zero_level = min(max_sparsity, non_zero_level)
-
-        logger.log(f"rtt_norm: {rtt_norm} rtt: {self.network_observer.rtt} non_zero_elements_ratio: {non_zero_elements_ratio} non_zero_level: {non_zero_level}")
-
-        return non_zero_level
+        pl_norm = self.get_pl()
+        return ((rtt_factor * rtt_norm) + (pl_factor * pl_norm))

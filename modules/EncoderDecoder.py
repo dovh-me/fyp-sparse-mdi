@@ -62,7 +62,8 @@ class SparseEncoding(EncodingStrategy):
 
     def encode(self, tensor: np.ndarray, sparsity_level: int) -> bytes:
         # sparsity_level = self.sparsity_engine.compute_tensor_sparsity(tensor) 
-        k = int(round((tensor.size * sparsity_level), 0))
+        # k = int(round((tensor.size * sparsity_level), 0))
+        k = int(round((sparsity_level), 0))
         logger.log(f"k: {k} | sparsity_level: {sparsity_level}")
 
         shape = tensor.shape
@@ -112,12 +113,12 @@ class EncoderDecoderManager:
         is_adaptive = strategy_name == 'adaptive'
 
         if is_adaptive: 
-            non_zero_ratio = self.sparsity_engine.compute_sparsity_level(inference_tensor=tensor)
-            strategy_name = 'sparse' if non_zero_ratio <= 0.5 else 'huffman'
+            k, sparsity_ratio = self.sparsity_engine.compute_sparsity_level(inference_tensor=tensor)
+            strategy_name = 'sparse' if sparsity_ratio >= 0.5 else 'huffman'
 
             encoded_tensor = None
             if strategy_name == 'sparse':
-                encoded_tensor = self.strategies[strategy_name].encode(tensor, sparsity_level=non_zero_ratio)
+                encoded_tensor = self.strategies[strategy_name].encode(tensor, sparsity_level=k)
             else: 
                 encoded_tensor = self.strategies[strategy_name].encode(tensor)
 
