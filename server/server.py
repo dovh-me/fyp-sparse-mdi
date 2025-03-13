@@ -6,6 +6,9 @@ from concurrent import futures
 import grpc
 import traceback
 import numpy as np
+import json
+
+from modules.SparsityEngine import SparsityEngine
 
 module_path = os.path.abspath('../')
 sys.path.insert(0, module_path)
@@ -29,7 +32,7 @@ class InferenceTask:
         self.input_tensor = input_tensor
 
 class Server(server_pb2_grpc.ServerServicer):
-    def __init__(self, node_config = {}):
+    def __init__(self, node_config = []):
         super().__init__()
         self.node_registry = {}  # Maps node IPs to their assigned model parts
         self.model_partitions_dir = "./model_parts"
@@ -41,8 +44,12 @@ class Server(server_pb2_grpc.ServerServicer):
         self.network_ready_future = asyncio.Future()
         self.node_config = node_config 
         self.network_observer = NetworkObservabilityTracker()
-        self.encoderDecoder = EncoderDecoderManager(network_observer=self.network_observer)
+        self.sparsity_engine = SparsityEngine(network_observer=self.network_observer)
+        self.encoderDecoder = EncoderDecoderManager(network_observer=self.network_observer, sparsity_engine=self.sparsity_engine)
         self.PROCESSES = multiprocessing.cpu_count() - 1
+
+        # TODO Remove if possible
+        self.assigned_node_config_index = 0
 
         # Download the model parts zip
         # Extract the contents to the model_partitions_dir
@@ -97,6 +104,12 @@ class Server(server_pb2_grpc.ServerServicer):
         # Read and stream the model part back to the new node
         model_part_path = os.path.join(self.model_partitions_dir, assigned_part + '.onnx')
 
+        node_index = self.assigned_node_config_index 
+        node_config = {}
+        if node_index < len(self.node_config):
+            node_config = self.node_config[node_index]
+            self.assigned_node_config_index+=1
+
         try:
             with open(model_part_path, "rb") as f:
                 while chunk := f.read(1024 * 1024):  # Stream 1MB chunks
@@ -105,7 +118,8 @@ class Server(server_pb2_grpc.ServerServicer):
                         port=node_port,
                         prev_node=self.last_node_ip,
                         model_part_id=assigned_part,
-                        chunk=chunk
+                        chunk=chunk,
+                        config=json.dumps(node_config)
                     )
         except FileNotFoundError:
             yield server_pb2.RegisterResponse(
@@ -313,7 +327,10 @@ async def serve():
     """
     port = "50051"
     server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
-    coordinator_node = Server()
+    with open('node_config.json') as f:
+            node_config = json.load(f)
+
+    coordinator_node = Server(node_config=node_config)
 
     server_pb2_grpc.add_ServerServicer_to_server(coordinator_node, server)
     server.add_insecure_port("[::]:" + port)

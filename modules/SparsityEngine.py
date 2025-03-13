@@ -12,12 +12,13 @@ from dataclasses import dataclass
 @dataclass
 class SparsityEngineDefaults:
     min_sparsity = 0.2
-    max_sparsity = 0.7
+    max_sparsity = 0.5
     min_rtt = 8 # in ms
     max_rtt = min_rtt + 2
     min_pl = 0.01 # in % (0-1)
-    rtt_factor = 1
+    rtt_factor = 0.5
     pl_factor = 0 # Assuming no impact from Packet loss
+    sparsity_factor = 1
 
 class SparsityEngine:
     def __init__(self, network_observer: NetworkObservabilityTracker, defaults: SparsityEngineDefaults = SparsityEngineDefaults()):
@@ -31,6 +32,19 @@ class SparsityEngine:
         self.network_observer = network_observer
         self.defaults = defaults
 
+    def update_defaults(self, defaults: SparsityEngineDefaults):
+        self.defaults = defaults
+    
+    def update_defaults_from_node_config(self, node_config):
+        self.defaults.sparsity_factor = node_config.get('sparsity_factor',self.defaults.sparsity_factor)
+        self.defaults.max_sparsity = node_config.get('max_sparsity', self.defaults.max_sparsity) 
+        self.defaults.min_rtt = node_config.get('min_rtt', self.defaults.min_rtt) 
+        self.defaults.max_rtt = node_config.get('max_rtt', self.defaults.max_rtt) 
+        self.defaults.min_pl = node_config.get('max_rtt', self.defaults.min_pl) 
+        self.defaults.rtt_factor = node_config.get('max_rtt', self.defaults.rtt_factor) 
+        self.defaults.pl_factor = node_config.get('pl_factor', self.defaults.pl_factor) 
+        self.defaults.sparsity_factor = node_config.get('sparsity_factor', self.defaults.sparsity_factor) 
+
     def compute_tensor_sparsity(self, tensor):
         """
         Calculates the sparsity of a given tensor.
@@ -38,9 +52,7 @@ class SparsityEngine:
         :param tensor: NumPy array representing the inference activations.
         :return: Sparsity ratio (0 to 1).
         """
-        non_zero_elements = np.count_nonzero(tensor == 0)
-        total_elements = tensor.size
-        return non_zero_elements, 1 - (non_zero_elements / total_elements)
+        return np.count_nonzero(tensor == 0)
     
     def get_rtt(self):
         network_metrics = self.network_observer.get_rtt()
@@ -69,15 +81,14 @@ class SparsityEngine:
         max_sparsity = defaults.max_sparsity
 
         # Compute Tensor Sparsity
-        non_zero_elements, sparsity_level = self.compute_tensor_sparsity(inference_tensor)
+        non_zero_elements = self.compute_tensor_sparsity(inference_tensor)
 
         network_factor = self.compute_network_factor()
-        k = non_zero_elements * network_factor 
-        min_k = non_zero_elements * max_sparsity
+        added_sparsity_level = min(network_factor, max_sparsity)
+        k = non_zero_elements * (1 - added_sparsity_level)
+        sparsity_level = 1 - (k / inference_tensor.size) 
 
-        k = max(min_k, k)
-
-        logger.log(f"rtt: {self.network_observer.rtt} sparsity_level: {sparsity_level} k: {k}")
+        logger.log(f"non_zero_elements:{non_zero_elements} sparsity_level: {sparsity_level} added_sparsity_level: {added_sparsity_level} k: {k}")
 
         return k, sparsity_level
 
@@ -85,10 +96,11 @@ class SparsityEngine:
         defaults = self.defaults
         rtt_factor = defaults.rtt_factor
         pl_factor = defaults.pl_factor
+        sparsity_factor = defaults.sparsity_factor
 
         # Get Network Metrics
         rtt_norm = self.get_rtt()
         rtt_norm = 1 if rtt_norm <= 0 else rtt_norm
 
         pl_norm = self.get_pl()
-        return ((rtt_factor * rtt_norm) + (pl_factor * pl_norm))
+        return sparsity_factor * ((rtt_factor * rtt_norm) + (pl_factor * pl_norm))

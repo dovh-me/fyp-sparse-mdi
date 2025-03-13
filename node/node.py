@@ -5,6 +5,7 @@ import asyncio
 import numpy as np
 import onnxruntime as ort
 import time
+import json
 
 from util import status, logger
 logger = logger.logger
@@ -12,14 +13,14 @@ logger = logger.logger
 module_path = os.path.abspath('../')
 sys.path.insert(0, module_path)
 
-from modules.SparsityEngine import SparsityEngine
+from modules.SparsityEngine import SparsityEngine, SparsityEngineDefaults
 from modules.EncoderDecoder import EncoderDecoderManager
 from modules.NetworkObservabilityTracker import NetworkObservabilityTracker
 from node.node_server import main as serve
 from generated.node_pb2 import InferenceRequest, InferenceResponse, PingRequest
 from generated.node_pb2_grpc import NodeServiceStub
 from generated.server_pb2_grpc import ServerStub 
-from generated.server_pb2 import EndInferenceRequest, RegisterRequest, Test, ReadyRequest, ServerPingRequest
+from generated.server_pb2 import EndInferenceRequest, RegisterRequest, RegisterResponse, Test, ReadyRequest, ServerPingRequest
 
 class NodeNotConnected(Exception):
     def __init__(self, task_id, port, *args):
@@ -37,10 +38,12 @@ class Node:
         self.model_part_id = None
         self.port = None
         self.network_observability = NetworkObservabilityTracker()
-        self.encoderDecoder = EncoderDecoderManager(network_observer=self.network_observability)
+        self.sparsity_engine = SparsityEngine(network_observer=self.network_observability)
+        self.encoderDecoder = EncoderDecoderManager(network_observer=self.network_observability, sparsity_engine=self.sparsity_engine)
         self.connection = asyncio.Future() 
         self.next_node = asyncio.Future() 
         self.encoding_strategy = "adaptive"
+        self.config = {}
 
     async def register(self, stub: ServerStub):
         """
@@ -70,8 +73,15 @@ class Node:
                 
                 if response.port:
                     self.port = response.port
+                    if self.port == 50055:
+                        self.encoding_strategy = "huffman"
+                
+                if response.config:
+                    self.config = json.loads(response.config)
+                    self.load_config()
 
         logger.set_logger_id(self.port) 
+        logger.log(f"node config: {self.config}")
 
         # Rename the downloaded file
         updated_model_file_path = f"model_part_{self.model_part_id}.onnx"
@@ -86,10 +96,18 @@ class Node:
         # Store the input shape from the model's input metadata
         input_metadata = self.ort_session.get_inputs()[0]
         self.input_name = input_metadata.name
-        self.input_shape = input_metadata.shape  # e.g., [batch_size, 3, 32, 32]
+        self.input_shape = input_metadata.shape
         logger.log(f"Model input shape: {self.input_shape}")
 
         return (updated_model_file_path, self.port)
+
+    def load_config(self):
+        node_config = self.config
+        self.encoding_strategy = node_config.get('encoding_strategy', self.encoding_strategy)
+        
+        # Update the defaults
+        self.sparsity_engine.update_defaults_from_node_config(node_config=node_config)
+
 
     def infer(self, task_id, input):
         # Update ingress metrics

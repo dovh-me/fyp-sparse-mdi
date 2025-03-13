@@ -53,6 +53,7 @@ message RegisterResponse {
     string model_part_id = 6;
     int32 port = 7;
     bytes chunk = 8; // Chunk of the model file
+    string config = 9;
 }
 
 message InferenceMetricsRequest { }

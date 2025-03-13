@@ -74,6 +74,7 @@ async def perform_inference(server_address: str, x_test, y_test):
             print(f"total egress_bytes: {response.egress_bytes}B")
             print(f"As Mega Bytes: {response.egress_bytes/(1000*1000)}MB")
             print(f"Time elapsed: {inference_iterator.format_dict['elapsed']}s")
+            print(f"{accuracy:.2%},{response.egress_bytes}B,{response.egress_bytes/(1000*1000)}MB,{inference_iterator.format_dict['elapsed']}s")
         except Exception as e:
             print(e)
 

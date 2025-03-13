@@ -98,14 +98,14 @@ class SparseEncoding(EncodingStrategy):
 
 # Encoder-Decoder Manager
 class EncoderDecoderManager:
-    def __init__(self, network_observer: NetworkObservabilityTracker):
+    def __init__(self, network_observer: NetworkObservabilityTracker, sparsity_engine: SparsityEngine):
         self.network_observer = network_observer
         self.strategies: Dict[str, EncodingStrategy] = {}
         self.register_strategy('huffman', HuffmanEncoding())
         self.register_strategy('sparse', SparseEncoding(network_observer=network_observer))
 
-        self.sparsity_engine = SparsityEngine(network_observer=network_observer)
-    
+        self.sparsity_engine = sparsity_engine 
+
     def register_strategy(self, name: str, strategy: EncodingStrategy):
         self.strategies[name] = strategy
     
@@ -121,6 +121,8 @@ class EncoderDecoderManager:
                 encoded_tensor = self.strategies[strategy_name].encode(tensor, sparsity_level=k)
             else: 
                 encoded_tensor = self.strategies[strategy_name].encode(tensor)
+            
+            logger.log(f"strategy_name: {strategy_name}, sparsity_level: {sparsity_ratio}, k: {k}, tensor_size: {tensor.size}")
 
             return strategy_name.encode() + b'|' + encoded_tensor
   
