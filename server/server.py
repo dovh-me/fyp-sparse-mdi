@@ -148,7 +148,7 @@ class Server(server_pb2_grpc.ServerServicer):
         self.last_node_ip = ready_node_ip
         logger.log(f"Last node ip updated: {self.last_node_ip}")
 
-        is_final_node = list(self.node_registry)[-1] == ready_node_ip and len(self.node_registry) == 3 # hard coded for now
+        is_final_node = list(self.node_registry)[-1] == ready_node_ip and len(self.node_registry) == len(self.node_config) # hard coded for now
         
         logger.log(f"Connecting to current last to node: {current_last_node} -> {ready_node_ip}")
         async with grpc.aio.insecure_channel(current_last_node) as channel:
@@ -255,7 +255,7 @@ class Server(server_pb2_grpc.ServerServicer):
 
     def update_network_is_ready(self):
        current_nodes_count = len(self.node_registry) 
-       required_nodes_count = 3 # len(self.node_config)
+       required_nodes_count = len(self.node_config)
        logger.log(f"is ready {current_nodes_count} == {required_nodes_count}")
        self.is_network_ready = current_nodes_count == required_nodes_count
 
