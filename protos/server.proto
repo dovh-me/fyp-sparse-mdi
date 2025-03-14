@@ -34,6 +34,7 @@ message EndInferenceResponse {
 
 message ReadyRequest {
     int32 port = 1;
+    string node_id = 2;
 }
 
 message ReadyResponse {
@@ -53,6 +54,7 @@ message RegisterResponse {
     string model_part_id = 6;
     int32 port = 7;
     bytes chunk = 8; // Chunk of the model file
+    string config = 9;
 }
 
 message InferenceMetricsRequest { }

@@ -7,5 +7,8 @@ class Logger:
 
     def log(self, *args):
         print(f"[{self.logger_id}]", *args)
+    
+    def error(self, *args):
+        print(f"[ERROR][{self.logger_id}]", *args)
 
 logger = Logger()

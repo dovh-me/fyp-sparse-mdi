@@ -62,7 +62,8 @@ class SparseEncoding(EncodingStrategy):
 
     def encode(self, tensor: np.ndarray, sparsity_level: int) -> bytes:
         # sparsity_level = self.sparsity_engine.compute_tensor_sparsity(tensor) 
-        k = int(round((tensor.size * sparsity_level), 0))
+        # k = int(round((tensor.size * sparsity_level), 0))
+        k = int(round((sparsity_level), 0))
         logger.log(f"k: {k} | sparsity_level: {sparsity_level}")
 
         shape = tensor.shape
@@ -97,14 +98,14 @@ class SparseEncoding(EncodingStrategy):
 
 # Encoder-Decoder Manager
 class EncoderDecoderManager:
-    def __init__(self, network_observer: NetworkObservabilityTracker):
+    def __init__(self, network_observer: NetworkObservabilityTracker, sparsity_engine: SparsityEngine):
         self.network_observer = network_observer
         self.strategies: Dict[str, EncodingStrategy] = {}
         self.register_strategy('huffman', HuffmanEncoding())
         self.register_strategy('sparse', SparseEncoding(network_observer=network_observer))
 
-        self.sparsity_engine = SparsityEngine(network_observer=network_observer)
-    
+        self.sparsity_engine = sparsity_engine 
+
     def register_strategy(self, name: str, strategy: EncodingStrategy):
         self.strategies[name] = strategy
     
@@ -112,14 +113,16 @@ class EncoderDecoderManager:
         is_adaptive = strategy_name == 'adaptive'
 
         if is_adaptive: 
-            non_zero_ratio = self.sparsity_engine.compute_sparsity_level(inference_tensor=tensor)
-            strategy_name = 'sparse' if non_zero_ratio <= 0.5 else 'huffman'
+            k, sparsity_ratio = self.sparsity_engine.compute_sparsity_level(inference_tensor=tensor)
+            strategy_name = 'sparse' if sparsity_ratio >= 0.5 else 'huffman'
 
             encoded_tensor = None
             if strategy_name == 'sparse':
-                encoded_tensor = self.strategies[strategy_name].encode(tensor, sparsity_level=non_zero_ratio)
+                encoded_tensor = self.strategies[strategy_name].encode(tensor, sparsity_level=k)
             else: 
                 encoded_tensor = self.strategies[strategy_name].encode(tensor)
+            
+            logger.log(f"strategy_name: {strategy_name}, sparsity_level: {sparsity_ratio}, k: {k}, tensor_size: {tensor.size}")
 
             return strategy_name.encode() + b'|' + encoded_tensor
   

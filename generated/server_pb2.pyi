@@ -41,10 +41,12 @@ class EndInferenceResponse(_message.Message):
     def __init__(self, status_code: _Optional[int] = ..., message: _Optional[str] = ...) -> None: ...
 
 class ReadyRequest(_message.Message):
-    __slots__ = ("port",)
+    __slots__ = ("port", "node_id")
     PORT_FIELD_NUMBER: _ClassVar[int]
+    NODE_ID_FIELD_NUMBER: _ClassVar[int]
     port: int
-    def __init__(self, port: _Optional[int] = ...) -> None: ...
+    node_id: str
+    def __init__(self, port: _Optional[int] = ..., node_id: _Optional[str] = ...) -> None: ...
 
 class ReadyResponse(_message.Message):
     __slots__ = ("status_code", "message")
@@ -61,7 +63,7 @@ class RegisterRequest(_message.Message):
     def __init__(self, ip: _Optional[str] = ...) -> None: ...
 
 class RegisterResponse(_message.Message):
-    __slots__ = ("status_code", "message", "first_node", "prev_node", "model_part_id", "port", "chunk")
+    __slots__ = ("status_code", "message", "first_node", "prev_node", "model_part_id", "port", "chunk", "config")
     STATUS_CODE_FIELD_NUMBER: _ClassVar[int]
     MESSAGE_FIELD_NUMBER: _ClassVar[int]
     FIRST_NODE_FIELD_NUMBER: _ClassVar[int]
@@ -69,6 +71,7 @@ class RegisterResponse(_message.Message):
     MODEL_PART_ID_FIELD_NUMBER: _ClassVar[int]
     PORT_FIELD_NUMBER: _ClassVar[int]
     CHUNK_FIELD_NUMBER: _ClassVar[int]
+    CONFIG_FIELD_NUMBER: _ClassVar[int]
     status_code: int
     message: str
     first_node: str
@@ -76,7 +79,8 @@ class RegisterResponse(_message.Message):
     model_part_id: str
     port: int
     chunk: bytes
-    def __init__(self, status_code: _Optional[int] = ..., message: _Optional[str] = ..., first_node: _Optional[str] = ..., prev_node: _Optional[str] = ..., model_part_id: _Optional[str] = ..., port: _Optional[int] = ..., chunk: _Optional[bytes] = ...) -> None: ...
+    config: str
+    def __init__(self, status_code: _Optional[int] = ..., message: _Optional[str] = ..., first_node: _Optional[str] = ..., prev_node: _Optional[str] = ..., model_part_id: _Optional[str] = ..., port: _Optional[int] = ..., chunk: _Optional[bytes] = ..., config: _Optional[str] = ...) -> None: ...
 
 class InferenceMetricsRequest(_message.Message):
     __slots__ = ()

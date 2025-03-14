@@ -81,18 +81,21 @@ class NodeServer(node_pb2_grpc.NodeServiceServicer):
         """
         try:
             next_node = request.next_node
-            logger.log(f"Next node updated to: {next_node}")
+            logger.log(f"Updating next node to: {next_node}")
             if next_node == None:
                self.node.next_node.set_result(None)
             else:
                self.node.next_node.set_result(next_node)
-                
+
+            logger.log(f"Next node updated to: {next_node}")
             return node_pb2.UpdateNextNodeResponse(
                 status_code=status.NODE_UPDATE_SUCCESS,
             )
         except Exception as e:
             message=f"There was an error updating next node reference {e}"
-            logger.log(message)
+            logger.error(message)
+            traceback.print_exc()
+
             return node_pb2.UpdateNextNodeResponse(
                 status_code=status.NODE_UPDATE_ERROR,
                 message=message
