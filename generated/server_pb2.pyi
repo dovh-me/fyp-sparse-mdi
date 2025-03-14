@@ -41,10 +41,12 @@ class EndInferenceResponse(_message.Message):
     def __init__(self, status_code: _Optional[int] = ..., message: _Optional[str] = ...) -> None: ...
 
 class ReadyRequest(_message.Message):
-    __slots__ = ("port",)
+    __slots__ = ("port", "node_id")
     PORT_FIELD_NUMBER: _ClassVar[int]
+    NODE_ID_FIELD_NUMBER: _ClassVar[int]
     port: int
-    def __init__(self, port: _Optional[int] = ...) -> None: ...
+    node_id: str
+    def __init__(self, port: _Optional[int] = ..., node_id: _Optional[str] = ...) -> None: ...
 
 class ReadyResponse(_message.Message):
     __slots__ = ("status_code", "message")

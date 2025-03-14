@@ -78,7 +78,7 @@ class Server(server_pb2_grpc.ServerServicer):
             return
 
         # Allocate the next available model part
-        model_parts = sorted([os.path.splitext(filename)[0] for filename in os.listdir(self.model_partitions_dir)])
+        model_parts = sorted([os.path.splitext(filename)[0] for filename in filter(lambda x: x.endswith('.onnx'), os.listdir(self.model_partitions_dir))])
         assigned_part = None
 
         for part in model_parts:
@@ -135,12 +135,17 @@ class Server(server_pb2_grpc.ServerServicer):
         # Get the port from the request
         if(request.port == None):
             return  server_pb2.ReadyResponse(status_code=status.NODE_UPDATE_ERROR, message="Port is required")
+
+        if(request.node_id == None): 
+            return  server_pb2.ReadyResponse(status_code=status.NODE_UPDATE_ERROR, message="Node Id is required")
         
+        node_id = request.node_id
         ready_node_ip += f":{request.port}"
-        logger.log(f"Node ready informed: {ready_node_ip}")
+        is_single_node = len(self.node_config) == 1
+        logger.log(f"Node ready informed: {ready_node_ip}, is_single_node: {is_single_node}")
 
         # Early termination upon receiving the confirmation from the first node
-        if(ready_node_ip == self.last_node_ip):
+        if(ready_node_ip == self.last_node_ip and is_single_node != True):
             logger.log(f"First node initialize informed: {ready_node_ip}")
             return server_pb2.ReadyResponse(status_code=status.NODE_READY_INFORM_SUCCESS) 
 
@@ -148,20 +153,22 @@ class Server(server_pb2_grpc.ServerServicer):
         self.last_node_ip = ready_node_ip
         logger.log(f"Last node ip updated: {self.last_node_ip}")
 
-        is_final_node = list(self.node_registry)[-1] == ready_node_ip and len(self.node_registry) == len(self.node_config) # hard coded for now
+        # is_final_node = list(self.node_registry)[-1] == ready_node_ip and len or is_single_node 
+        is_final_node = self.node_config[-1].get("node_id","") == node_id or is_single_node 
         
-        logger.log(f"Connecting to current last to node: {current_last_node} -> {ready_node_ip}")
-        async with grpc.aio.insecure_channel(current_last_node) as channel:
-            stub = node_pb2_grpc.NodeServiceStub(channel)
-            request = node_pb2.UpdateNextNodeRequest(next_node=ready_node_ip)
-            response : node_pb2.UpdateNextNodeResponse = await stub.UpdateNextNode(request)
+        if (is_single_node == False):
+            logger.log(f"Connecting to current last to node: {current_last_node} -> {ready_node_ip}")
+            async with grpc.aio.insecure_channel(current_last_node) as channel:
+                stub = node_pb2_grpc.NodeServiceStub(channel)
+                request = node_pb2.UpdateNextNodeRequest(next_node=ready_node_ip)
+                response : node_pb2.UpdateNextNodeResponse = await stub.UpdateNextNode(request)
 
-            if(response.status_code != status.NODE_UPDATE_SUCCESS): 
-                logger.log(f"Error updating the next node for ip:{current_last_node}\n{response.message}")
-                self.last_node_ip = current_last_node
-                logger.log(f"Reverted last_node_ip to {current_last_node}")
-                return server_pb2.ReadyResponse(status_code=status.NODE_UPDATE_ERROR, message=response.message) 
-                
+                if(response.status_code != status.NODE_UPDATE_SUCCESS): 
+                    logger.error(f"Error updating the next node for ip:{current_last_node}\n{response.message}")
+                    self.last_node_ip = current_last_node
+                    logger.log(f"Reverted last_node_ip to {current_last_node}")
+                    return server_pb2.ReadyResponse(status_code=status.NODE_UPDATE_ERROR, message=response.message) 
+                    
         if(is_final_node):
             logger.log(f"Final Node Ready Received: Informing ({ready_node_ip}) to connect to the server")
             await self.inform_final_node_to_connect_to_coordinator(last_node_ip=ready_node_ip) 
@@ -171,7 +178,7 @@ class Server(server_pb2_grpc.ServerServicer):
         return server_pb2.ReadyResponse(status_code=status.NODE_READY_INFORM_SUCCESS) 
 
     async def inform_final_node_to_connect_to_coordinator(self, last_node_ip: str):
-        logger.log(f"Informing previous last node {self.last_node_ip} of the last_node_ip update to {last_node_ip}")
+        logger.log(f"Informing previous last node {self.last_node_ip} to connect to coordinator")
         async with grpc.aio.insecure_channel(last_node_ip) as channel:
             stub = node_pb2_grpc.NodeServiceStub(channel)
             request = node_pb2.UpdateNextNodeRequest()

@@ -81,7 +81,6 @@ class Node:
                     self.load_config()
 
         logger.set_logger_id(self.port) 
-        logger.log(f"node config: {self.config}")
 
         # Rename the downloaded file
         updated_model_file_path = f"model_part_{self.model_part_id}.onnx"
@@ -97,9 +96,9 @@ class Node:
         input_metadata = self.ort_session.get_inputs()[0]
         self.input_name = input_metadata.name
         self.input_shape = input_metadata.shape
-        logger.log(f"Model input shape: {self.input_shape}")
+        logger.log(f"Model input shape: {self.input_shape}, {self.config}")
 
-        return (updated_model_file_path, self.port)
+        return (updated_model_file_path, self.port, self.config.get("node_id", ""))
 
     def load_config(self):
         node_config = self.config
@@ -239,7 +238,7 @@ async def main(coordinator_ip="127.0.0.1:50051"):
             await stub.Hello(temp_request)
 
             print('Registering node...')
-            (model_file_path, port) = await node.register(stub)
+            (model_file_path, port, node_id) = await node.register(stub)
             print('Successfully registered node...')
 
             # Start the gRPC server to allow other nodes to send input tensors for inference
@@ -249,7 +248,7 @@ async def main(coordinator_ip="127.0.0.1:50051"):
             # The server registers the ip of the current node as the last ip
             # Could be an issue - verify
             logger.log(f'Informing node is ready {node.model_part_id}')
-            readyRequest = ReadyRequest(port=port)
+            readyRequest = ReadyRequest(port=port, node_id=node_id)
             await stub.InformReady(readyRequest)
 
             # Wait for the next node to be initialized 
