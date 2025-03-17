@@ -129,7 +129,12 @@ class EncoderDecoderManager:
         if strategy_name not in self.strategies:
             raise ValueError(f"Encoding strategy '{strategy_name}' not found.")
 
-        encoded_tensor = self.strategies[strategy_name].encode(tensor)
+        encoded_tensor = None 
+        if strategy_name == 'sparse':
+            encoded_tensor = self.strategies[strategy_name].encode(tensor, sparsity_level=1000) # Hardcoded for now
+        else: 
+            encoded_tensor = self.strategies[strategy_name].encode(tensor)
+
         return strategy_name.encode() + b'|' + encoded_tensor
     
     def decode(self, encoded_data: bytes) -> np.ndarray:

@@ -40,8 +40,8 @@ class SparsityEngine:
         self.defaults.max_sparsity = node_config.get('max_sparsity', self.defaults.max_sparsity) 
         self.defaults.min_rtt = node_config.get('min_rtt', self.defaults.min_rtt) 
         self.defaults.max_rtt = node_config.get('max_rtt', self.defaults.max_rtt) 
-        self.defaults.min_pl = node_config.get('max_rtt', self.defaults.min_pl) 
-        self.defaults.rtt_factor = node_config.get('max_rtt', self.defaults.rtt_factor) 
+        self.defaults.min_pl = node_config.get('min_pl', self.defaults.min_pl) 
+        self.defaults.rtt_factor = node_config.get('rtt_factor', self.defaults.rtt_factor) 
         self.defaults.pl_factor = node_config.get('pl_factor', self.defaults.pl_factor) 
         self.defaults.sparsity_factor = node_config.get('sparsity_factor', self.defaults.sparsity_factor) 
 
