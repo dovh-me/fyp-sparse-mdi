@@ -42,6 +42,26 @@ sleep 2
 python3 "$WORKDIR/run_node.py" &
 PIDS+=($!)
 
+# Wait 2 seconds before starting the third node
+sleep 2
+python3 "$WORKDIR/run_node.py" &
+PIDS+=($!)
+
+# Wait 2 seconds before starting the third node
+sleep 2
+python3 "$WORKDIR/run_node.py" &
+PIDS+=($!)
+
+# Wait 2 seconds before starting the third node
+sleep 2
+python3 "$WORKDIR/run_node.py" &
+PIDS+=($!)
+
+# Wait 2 seconds before starting the third node
+sleep 2
+python3 "$WORKDIR/run_node.py" &
+PIDS+=($!)
+
 # Wait indefinitely to allow the user to cancel the script
 while true; do
     sleep 1
