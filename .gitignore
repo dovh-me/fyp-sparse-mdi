@@ -163,3 +163,5 @@ cython_debug/
 
 # [Osura] Removing the model files
 **/*.pth
+
+**/data/**
