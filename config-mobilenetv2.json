@@ -1,0 +1,49 @@
+{
+    "server_config": {
+        "input_shape": [
+            1,
+            3,
+            224,
+            224
+        ],
+        "output_shape": [
+            1,
+            1000
+        ]
+    },
+    "node_config": [
+        {
+            "node_id": "1",
+            "max_sparsity": 0.8,
+            "min_rtt": 8,
+            "max_rtt": 10,
+            "min_pl": 0.01,
+            "rtt_factor": 1,
+            "pl_factor": 0,
+            "sparsity_factor": 0.8,
+            "encoding_strategy": "huffman"
+        },
+        {
+            "node_id": "2",
+            "max_sparsity": 0.8,
+            "min_rtt": 8,
+            "max_rtt": 10,
+            "min_pl": 0.01,
+            "rtt_factor": 1,
+            "pl_factor": 0,
+            "sparsity_factor": 0.8,
+            "encoding_strategy": "adaptive"
+        },
+        {
+            "node_id": "3",
+            "max_sparsity": 0.8,
+            "min_rtt": 8,
+            "max_rtt": 10,
+            "min_pl": 0.01,
+            "rtt_factor": 1,
+            "pl_factor": 0,
+            "sparsity_factor": 0.8,
+            "encoding_strategy": "adaptive"
+        }
+    ]
+}

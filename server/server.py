@@ -336,7 +336,7 @@ async def serve():
     """
     port = "50051"
     server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
-    with open('config-resnet50.json') as f:
+    with open('config-mobilenetv2.json') as f:
             config = json.load(f)
             server_config = config.get('server_config')
             node_config = config.get('node_config')
