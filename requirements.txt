@@ -3,5 +3,3 @@ onnx=^1.17.0
 onnxruntime
 grpcio
 grpcio-tools
-grpcio-observability
-opentelemetry-sdk
