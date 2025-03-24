@@ -1,5 +1,5 @@
 gdown
-onnx=^1.17.0
+onnx>=1.17.0
 onnxruntime
 grpcio
 grpcio-tools
