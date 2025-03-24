@@ -9,7 +9,10 @@
         "output_shape": [
             1,
             1000
-        ]
+        ],
+        "model_gdrive_id": "13X6yjJeZstt5KD6Bp-A5R1ipmxgH89j7",
+        "grpc_server_port": 50051,
+        "dashboard_server_port": 4010
     },
     "node_config": [
         {
