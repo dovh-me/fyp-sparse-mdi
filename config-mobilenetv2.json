@@ -1,5 +1,6 @@
 {
     "server_config": {
+        "model_gdrive_id": "1qKDnf_b_itFMx9VZvmxuqvNXjux50XjE",
         "input_shape": [
             1,
             3,
@@ -9,7 +10,9 @@
         "output_shape": [
             1,
             1000
-        ]
+        ],
+        "grpc_server_port": 50051,
+        "dashboard_server_port": 4010
     },
     "node_config": [
         {

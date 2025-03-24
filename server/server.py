@@ -7,6 +7,7 @@ import grpc
 import traceback
 import numpy as np
 import json
+import threading
 
 from modules.SparsityEngine import SparsityEngine
 
@@ -20,6 +21,7 @@ import generated.node_pb2_grpc as node_pb2_grpc
 from modules.EncoderDecoder import EncoderDecoderManager
 from modules.NetworkObservabilityTracker import NetworkObservabilityTracker
 from util import status, logger
+from server.dashboard_server import dashboard_server 
 
 node_ports = 50052
 
@@ -50,10 +52,7 @@ class Server(server_pb2_grpc.ServerServicer):
         self.PROCESSES = multiprocessing.cpu_count() - 1
 
         # TODO Remove if possible
-        self.assigned_node_config_index = 0
-
-        # Download the model parts zip
-        # Extract the contents to the model_partitions_dir
+        self.assigned_node_config_index = 0 
 
     async def RegisterNode(self, request, context):
         """
@@ -341,12 +340,25 @@ async def serve():
             server_config = config.get('server_config')
             node_config = config.get('node_config')
 
+    port = server_config.get('grpc_server_port', 55001)
+    dashboard_server_port = server_config.get('dashboard_server_port', 4010)
     coordinator_node = Server(node_config=node_config, server_config=server_config)
 
+    # GRPC Server
     server_pb2_grpc.add_ServerServicer_to_server(coordinator_node, server)
-    server.add_insecure_port("[::]:" + port)
-
+    server.add_insecure_port("[::]:" + str(port))
     logger.log(f"Coordinator node started, listening on port {port}")
+
+    # Dashboard server
+    logger.log(f"Starting dashboard server")
+    def run_flask_server():
+        dashboard_server.start_server(coordinator_node, {"port": dashboard_server_port})
+
+    flask_thread = threading.Thread(
+        target=run_flask_server, 
+        daemon=True
+    )
+    flask_thread.start()
 
     try:
         await server.start()
@@ -356,8 +368,6 @@ async def serve():
         logger.log(f"Terminating coordinator node due to a fatal error. Please contact support.")
         await server.stop(grace=None)
         return
-
-
 
 if __name__ == "__main__":
     asyncio.run(serve())
