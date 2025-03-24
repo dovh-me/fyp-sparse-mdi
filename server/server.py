@@ -7,6 +7,7 @@ import grpc
 import traceback
 import numpy as np
 import json
+import threading
 
 from modules.SparsityEngine import SparsityEngine
 
@@ -20,6 +21,7 @@ import generated.node_pb2_grpc as node_pb2_grpc
 from modules.EncoderDecoder import EncoderDecoderManager
 from modules.NetworkObservabilityTracker import NetworkObservabilityTracker
 from util import status, logger
+from server.dashboard_server import dashboard_server 
 
 node_ports = 50052
 
@@ -32,7 +34,7 @@ class InferenceTask:
         self.input_tensor = input_tensor
 
 class Server(server_pb2_grpc.ServerServicer):
-    def __init__(self, node_config = []):
+    def __init__(self, node_config = [], server_config = {}):
         super().__init__()
         self.node_registry = {}  # Maps node IPs to their assigned model parts
         self.model_partitions_dir = "./model_parts"
@@ -43,16 +45,14 @@ class Server(server_pb2_grpc.ServerServicer):
         self.inference_queue = asyncio.Queue()
         self.network_ready_future = asyncio.Future()
         self.node_config = node_config 
+        self.server_config = server_config
         self.network_observer = NetworkObservabilityTracker()
         self.sparsity_engine = SparsityEngine(network_observer=self.network_observer)
         self.encoderDecoder = EncoderDecoderManager(network_observer=self.network_observer, sparsity_engine=self.sparsity_engine)
         self.PROCESSES = multiprocessing.cpu_count() - 1
 
         # TODO Remove if possible
-        self.assigned_node_config_index = 0
-
-        # Download the model parts zip
-        # Extract the contents to the model_partitions_dir
+        self.assigned_node_config_index = 0 
 
     async def RegisterNode(self, request, context):
         """
@@ -215,8 +215,9 @@ class Server(server_pb2_grpc.ServerServicer):
             # encoded_values, encoded_indices = self.encoderDecoder.encode(input_tensor)
             # compressed_tensor = self.compress(encoded_values, encoded_indices)
             input_tensor = np.frombuffer(input_tensor, dtype=np.float32)
-            input_tensor = input_tensor.reshape([1, 3, 32, 32])
-            logger.log('From Server shape:', input_tensor.shape)
+            input_shape = self.server_config.get('input_shape')
+            input_tensor = input_tensor.reshape(input_shape)
+            logger.log('From Server shape:', input_tensor.shape, input_shape)
             tensor = self.encoderDecoder.encode('huffman', input_tensor)
 
             # Queue the task
@@ -334,15 +335,30 @@ async def serve():
     """
     port = "50051"
     server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
-    with open('node_config.json') as f:
-            node_config = json.load(f)
+    with open('config-mobilenetv2.json') as f:
+            config = json.load(f)
+            server_config = config.get('server_config')
+            node_config = config.get('node_config')
 
-    coordinator_node = Server(node_config=node_config)
+    port = server_config.get('grpc_server_port', 55001)
+    dashboard_server_port = server_config.get('dashboard_server_port', 4010)
+    coordinator_node = Server(node_config=node_config, server_config=server_config)
 
+    # GRPC Server
     server_pb2_grpc.add_ServerServicer_to_server(coordinator_node, server)
-    server.add_insecure_port("[::]:" + port)
-
+    server.add_insecure_port("[::]:" + str(port))
     logger.log(f"Coordinator node started, listening on port {port}")
+
+    # Dashboard server
+    logger.log(f"Starting dashboard server")
+    def run_flask_server():
+        dashboard_server.start_server(coordinator_node, {"port": dashboard_server_port})
+
+    flask_thread = threading.Thread(
+        target=run_flask_server, 
+        daemon=True
+    )
+    flask_thread.start()
 
     try:
         await server.start()
@@ -352,8 +368,6 @@ async def serve():
         logger.log(f"Terminating coordinator node due to a fatal error. Please contact support.")
         await server.stop(grace=None)
         return
-
-
 
 if __name__ == "__main__":
     asyncio.run(serve())

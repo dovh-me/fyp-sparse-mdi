@@ -8,6 +8,7 @@ import asyncio
 import traceback
 from util import status
 from tqdm import tqdm
+from sklearn.metrics import classification_report
 
 # Load and preprocess CIFAR-10 data
 def load_cifar10():
@@ -35,6 +36,9 @@ async def perform_inference(server_address: str, x_test, y_test):
         correct_predictions = 0
         total_predictions = len(test_dataset)
 
+        pred = []
+        ground_truth = []
+
         print("Starting inference...")
         try:
             inference_iterator = tqdm(test_dataset, total=total_predictions, desc="Inference Progress")
@@ -54,6 +58,9 @@ async def perform_inference(server_address: str, x_test, y_test):
                     result_array = result_array.reshape(result_shape)
                     predicted = np.argmax(result_array)  # Assume result is a probability distribution
 
+                    pred.append(predicted)
+                    ground_truth.append(label[0])
+
                     if tf.equal(np.array(predicted), label):
                         correct_predictions += 1
                 except grpc.aio.AioRpcError as e:
@@ -71,6 +78,7 @@ async def perform_inference(server_address: str, x_test, y_test):
             # Call the GetInferenceMetrics rpc on each node
             metrics_request = server_pb2.InferenceMetricsRequest()
             response: server_pb2.InferenceMetricsResponse = await stub.GetInferenceMetrics(metrics_request)
+            print(classification_report(ground_truth, pred, digits=4))
             print(f"total egress_bytes: {response.egress_bytes}B")
             print(f"As Mega Bytes: {response.egress_bytes/(1000*1000)}MB")
             print(f"Time elapsed: {inference_iterator.format_dict['elapsed']}s")
