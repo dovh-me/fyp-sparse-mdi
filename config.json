@@ -1,5 +1,7 @@
 {
+    "config_id": "MobileNetV2-3-nodes",
     "server_config": {
+        "model_id": "MobileNetV2",
         "input_shape": [
             1,
             3,
@@ -10,43 +12,97 @@
             1,
             1000
         ],
-        "model_gdrive_id": "1ados6aWfRtwLGBuaP_F1UFufG3t0pi6v",
+        "model_gdrive_id": "1qKDnf_b_itFMx9VZvmxuqvNXjux50XjE",
         "grpc_server_port": 50051,
         "dashboard_server_port": 4010
     },
     "node_config": [
         {
             "node_id": "1",
-            "max_sparsity": 0.99,
+            "max_sparsity": 0.8,
             "min_rtt": 8,
             "max_rtt": 10,
             "min_pl": 0.01,
             "rtt_factor": 1,
             "pl_factor": 0,
-            "sparsity_factor": 1,
+            "sparsity_factor": 0.8,
             "encoding_strategy": "huffman"
         },
         {
             "node_id": "2",
-            "max_sparsity": 0.99,
+            "max_sparsity": 0.8,
             "min_rtt": 8,
             "max_rtt": 10,
             "min_pl": 0.01,
             "rtt_factor": 1,
             "pl_factor": 0,
-            "sparsity_factor": 1,
-            "encoding_strategy": "huffman"
+            "sparsity_factor": 0.8,
+            "encoding_strategy": "adaptive"
         },
         {
             "node_id": "3",
-            "max_sparsity": 0.99,
+            "max_sparsity": 0.8,
             "min_rtt": 8,
             "max_rtt": 10,
             "min_pl": 0.01,
             "rtt_factor": 1,
             "pl_factor": 0,
-            "sparsity_factor": 1,
-            "encoding_strategy": "huffman"
+            "sparsity_factor": 0.8,
+            "encoding_strategy": "adaptive"
         }
-    ]
+    ],
+    "default": {
+        "config_id": "MobileNetV2-3-nodes",
+        "server_config": {
+            "model_id": "MobileNetV2",
+            "input_shape": [
+                1,
+                3,
+                224,
+                224
+            ],
+            "output_shape": [
+                1,
+                1000
+            ],
+            "model_gdrive_id": "1qKDnf_b_itFMx9VZvmxuqvNXjux50XjE",
+            "grpc_server_port": 50051,
+            "dashboard_server_port": 4010
+        },
+        "node_config": [
+            {
+                "node_id": "1",
+                "max_sparsity": 0.8,
+                "min_rtt": 8,
+                "max_rtt": 10,
+                "min_pl": 0.01,
+                "rtt_factor": 1,
+                "pl_factor": 0,
+                "sparsity_factor": 0.8,
+                "encoding_strategy": "huffman"
+            },
+            {
+                "node_id": "2",
+                "max_sparsity": 0.8,
+                "min_rtt": 8,
+                "max_rtt": 10,
+                "min_pl": 0.01,
+                "rtt_factor": 1,
+                "pl_factor": 0,
+                "sparsity_factor": 0.8,
+                "encoding_strategy": "adaptive"
+            },
+            {
+                "node_id": "3",
+                "max_sparsity": 0.8,
+                "min_rtt": 8,
+                "max_rtt": 10,
+                "min_pl": 0.01,
+                "rtt_factor": 1,
+                "pl_factor": 0,
+                "sparsity_factor": 0.8,
+                "encoding_strategy": "adaptive"
+            }
+        ]
+    }
 }

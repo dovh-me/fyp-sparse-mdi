@@ -51,6 +51,9 @@ class Server(server_pb2_grpc.ServerServicer):
         self.encoderDecoder = EncoderDecoderManager(network_observer=self.network_observer, sparsity_engine=self.sparsity_engine)
         self.PROCESSES = multiprocessing.cpu_count() - 1
 
+        if not os.path.exists(self.model_partitions_dir):
+            os.makedirs(self.model_partitions_dir)
+
         # TODO Remove if possible
         self.assigned_node_config_index = 0 
 
@@ -335,7 +338,7 @@ async def serve():
     """
     port = "50051"
     server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
-    with open('config-mobilenetv2.json') as f:
+    with open('config.json') as f:
             config = json.load(f)
             server_config = config.get('server_config')
             node_config = config.get('node_config')

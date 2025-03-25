@@ -207,7 +207,7 @@ class Node:
 
         end_time = time.time_ns()
         rtt = (end_time - start_time) /1000_000 # Convert to milliseconds
-        logger.log(f"RTT updated: {rtt}ms")
+        # logger.log(f"RTT updated: {rtt}ms")
 
         self.network_observability.update_rtt_with_next_node(rtt=rtt)
 

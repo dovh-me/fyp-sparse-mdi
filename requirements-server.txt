@@ -1,0 +1,6 @@
+gdown
+grpcio
+grpcio-tools
+flask
+flask_cors
+numpy

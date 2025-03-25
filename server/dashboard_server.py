@@ -1,18 +1,22 @@
 from flask import Flask, request, jsonify, send_file, stream_with_context
+from flask_cors import CORS, cross_origin
 from os import path
 import os
 import json
 import zipfile
 import gdown
+import time
 
-from util import logger
+from util import logger, remove_dir_contents
 logger = logger.logger
 
 app = Flask(__name__)
+cors = CORS(app) # allow CORS for all domains on all routes.
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 # Configuration
 CWD =   os.getcwd()
-CONFIG_FILE_NAME = "config-mobilenetv2.json"
+CONFIG_FILE_NAME = "config.json"
 
 CONFIG_FILE_PATH = path.join(CWD, CONFIG_FILE_NAME)
 DEFAULT_CONFIG = {
@@ -55,8 +59,11 @@ class DashboardServer():
             raise Exception("Model parts url not configured")
         
         print(gdrive_model_parts_id)
-        # download the model parts zip
+        # Download the model parts zip
         output_file_name = gdown.download(id=gdrive_model_parts_id, output=download_file_name)
+
+        # Clear the current directory
+        remove_dir_contents.remove_dir_contents(self.server.model_partitions_dir) 
 
         with zipfile.ZipFile(output_file_name, 'r') as zip_ref:
             zip_ref.extractall(self.server.model_partitions_dir)
@@ -81,8 +88,8 @@ class DashboardServer():
 
 dashboard_server = DashboardServer()
 
-
 @app.route('/config', methods=['GET'])
+@cross_origin()
 def get_config():
     """
     Endpoint to retrieve the current JSON configuration
@@ -90,6 +97,7 @@ def get_config():
     return send_file(CONFIG_FILE_PATH, mimetype='application/json')
 
 @app.route('/download-progress', methods=['GET'])
+@cross_origin()
 def download_progress():
     """
     Endpoint to retrieve the current JSON configuration
@@ -97,39 +105,62 @@ def download_progress():
     return send_file(CONFIG_FILE_PATH, mimetype='application/json')
 
 @app.route('/config', methods=['POST'])
+@cross_origin()
 def update_config():
     """
     Endpoint to upload and save a new JSON configuration
     """
+    print('update config hit')
+
     def generate():
         try:
             # Check if the request contains JSON data
             if not request.is_json:
-                yield jsonify({"error": "Request must contain JSON data"}), 400
+                yield "Request must contain JSON data.\n"
+                return  # Stop execution if the request is invalid
             
             # Get the JSON data from the request
             new_config = request.get_json()
-            
+
             # Save the new configuration to the file
-            with open(CONFIG_FILE_PATH, 'w') as f:
-                json.dump(new_config, f, indent=4)
+            try:
+                with open(CONFIG_FILE_PATH, 'w') as f:
+                    json.dump(new_config, f, indent=4)
+            except Exception as file_error:
+                logger.error(f"Failed to save configuration: {file_error}")
+                yield f"Error saving configuration: {file_error}\n"
+                return
             
             yield "Updated configuration.\n"
-            yield "Downloading ModelParts.\n"
-            dashboard_server.download_and_extract_model_parts()
-            yield "Successfully downloaded ModelParts.\n"
-            yield "Configuration updated successfully, Please restart the network to see the configuration in effect."
-        
+            time.sleep(1)
+            yield "Downloading ModelParts...\n"
+
+            # Attempt to download and extract model parts
+            try:
+                dashboard_server.download_and_extract_model_parts()
+                yield "Successfully downloaded ModelParts.\n"
+                time.sleep(1)
+            except Exception as model_error:
+                logger.error(f"Failed to download ModelParts: {model_error}")
+                yield f"Error downloading ModelParts: {model_error}\n"
+                return
+
+            yield "Model deployment success. Please restart the network to see the configuration in effect.\n"
+
         except Exception as e:
-            yield jsonify({"error": str(e)}), 500
+            logger.error(f"Unexpected error: {e}")
+            yield f"An unexpected error occurred: {e}\n"
+
     return stream_with_context(generate())
 
 @app.route('/health', methods=['GET'])
+@cross_origin()
 def health_check():
     """
     Simple health check endpoint
     """
     return jsonify({"status": "ok"}), 200
+
 
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=5000)
