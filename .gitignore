@@ -167,3 +167,5 @@ cython_debug/
 **/data/**
 **/model_parts/**
 **/model_parts.zip
+.DS_Store
+**/.DS_Store
