@@ -6,6 +6,7 @@ import json
 import zipfile
 import gdown
 import time
+import numpy as np
 
 from util import logger, remove_dir_contents
 logger = logger.logger
@@ -153,13 +154,49 @@ def update_config():
 
     return stream_with_context(generate())
 
+@app.route('/infer', methods=['POST'])
+async def handle_raw_inference():
+    try:
+        image_bytes = request.data  # Read raw bytes
+
+        # Convert JSON to Python dict
+        data = json.loads(image_bytes)
+
+        # Convert dict values to byte array
+        image_bytes = bytes([data[str(i)] for i in range(len(data))])
+        image_bytes = dashboard_server.server.preprocess_image(image_bytes)
+        result = await dashboard_server.server.start_inference(image_bytes)  # Pass bytes to inference function
+        
+        result = np.squeeze(result)
+        def softmax(x):
+            e_x = np.exp(x - np.max(x))
+            return e_x / e_x.sum()
+
+        result = softmax(result)
+        # Get indices of top 5 probabilities (unordered but faster)
+        top_5_unordered = np.argpartition(result, -5)[-5:]
+
+        # Sort these indices based on actual values to get correct order
+        top_5_indices = top_5_unordered[np.argsort(result[top_5_unordered])[::-1]][:5]
+
+        # Get corresponding probabilities
+        top_5_probs = result[top_5_indices]
+
+        return jsonify({
+            'class_indices': top_5_indices.tolist(),
+            'probabilities': top_5_probs.tolist()
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/health', methods=['GET'])
-@cross_origin()
-def health_check():
+async def health_check():
     """
     Simple health check endpoint
     """
-    return jsonify({"status": "ok"}), 200
+    is_ready = dashboard_server.server.network_ready_future.done()
+    return jsonify({"status": "ok", "is_ready": is_ready, "is_online": True}), 200
 
 
 if __name__ == '__main__':

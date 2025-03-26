@@ -7,7 +7,9 @@ import grpc
 import traceback
 import numpy as np
 import json
+from PIL import Image
 import threading
+import io
 
 from modules.SparsityEngine import SparsityEngine
 
@@ -199,6 +201,105 @@ class Server(server_pb2_grpc.ServerServicer):
     async def Ping(self, request:server_pb2.ServerPingRequest, context: grpc.RpcContext) -> server_pb2.ServerPingResponse:
         return server_pb2.ServerPingResponse();
 
+    def preprocess_image(self, input_bytes, target_size=(224, 224)):
+        """
+        Detailed image preprocessing with extensive debugging information
+        
+        Args:
+        - input_bytes: Image bytes
+        - target_size: Desired output image size (default 224x224)
+        
+        Returns:
+        - Preprocessed image array
+        """
+        try:
+            # Open and convert image to RGB
+            img = Image.open(io.BytesIO(input_bytes)).convert('RGB')
+            
+            # Resize with aspect ratio preservation and center crop
+            width, height = img.size
+            
+            # Calculate resize scaling
+            scale = max(target_size[0] / width, target_size[1] / height)
+            new_width = int(width * scale)
+            new_height = int(height * scale)
+            
+            # Resize image
+            img = img.resize((new_width, new_height), Image.LANCZOS)
+            
+            # Calculate crop coordinates for center crop
+            left = (new_width - target_size[0]) // 2
+            top = (new_height - target_size[1]) // 2
+            right = left + target_size[0]
+            bottom = top + target_size[1]
+            
+            # Perform center crop
+            img = img.crop((left, top, right, bottom))
+            
+            # Convert to numpy array and print details
+            img_array = np.array(img, dtype=np.float32)
+            
+            # Normalize to [0, 1]
+            img_array = img_array / 255.0
+            
+            # Standardize using ImageNet mean and std
+            mean = np.array([0.485, 0.456, 0.406])
+            std = np.array([0.229, 0.224, 0.225])
+            img_array = (img_array - mean) / std
+            
+            # Transpose to (C, H, W)
+            img_array = img_array.transpose((2, 0, 1))
+            
+            # Add batch dimension
+            img_array = img_array[np.newaxis, :, :, :]
+            
+            return np.ascontiguousarray(img_array)
+        
+        except Exception as e:
+            print(f"Error in preprocessing: {e}")
+            raise 
+         
+    async def start_inference(self, input_tensor):
+        task_id = self.task_track_counter
+
+        try:
+            self.task_track_counter += 1
+            logger.log(f"Queuing new inference task with id: {task_id}") 
+
+            if(self.task_registry.get(task_id, None) != None):
+                logger.log(f"Task ids overlapped. {task_id}: is already in use.")
+                return None
+
+            # encoded_values, encoded_indices = self.encoderDecoder.encode(input_tensor)
+            # compressed_tensor = self.compress(encoded_values, encoded_indices)
+            # input_tensor = np.frombuffer(input_tensor, dtype=np.float32)
+            input_shape = self.server_config.get('input_shape')
+            # input_tensor = input_tensor.reshape(input_shape)
+            logger.log('From Server shape:', input_tensor.shape, input_shape)
+            tensor = self.encoderDecoder.encode('huffman', input_tensor)
+
+            # Queue the task
+            # inference_task = InferenceTask(task_id, compressed_tensor)
+            inference_task = InferenceTask(task_id, tensor)
+
+            # TODO : Should the put call be awaited?
+            await self.inference_queue.put(inference_task)
+
+            task = asyncio.Future()
+            self.task_registry[task_id] = task 
+            await asyncio.sleep(1)
+            while(not task.done()):
+                await asyncio.sleep(.5)
+
+            print(f"result: {task.done()}")
+            result = await task 
+            return  result
+
+        except Exception as e:
+            logger.log(f"There was error processing inference task: {task_id}")
+            logger.log(f"Err: {e}")
+            traceback.logger.log_exc()
+
     async def StartInference(self, request: server_pb2.StartInferenceRequest, context):
         task_id = self.task_track_counter
 
@@ -246,7 +347,7 @@ class Server(server_pb2_grpc.ServerServicer):
             logger.log("Not processing end inference request since task_id is not defined")
             return server_pb2.EndInferenceResponse(status_code=status.BAD_REQUEST, message="Task id is not defined")
 
-        task = self.task_registry[task_id]
+        task = self.task_registry.get(task_id, None)
         if(task == None): 
             logger.log(f"Received task id is not valid {task_id}")
             return server_pb2.EndInferenceResponse(status_code=status.SERVER_ERROR, message="Invalid task id.") 
@@ -257,12 +358,16 @@ class Server(server_pb2_grpc.ServerServicer):
             logger.log(f"Invalid inference end request without results received for  {task_id}")
             return server_pb2.EndInferenceResponse(status_code=status.SERVER_ERROR, message="Invalid task id.") 
 
-        logger.log(f"task_id: {task_id} future has been resolved")
         result = self.encoderDecoder.decode(result)
 
         task.set_result(result)
+        logger.log(f"task_id: {task_id} future has been resolved {task.done()}")
 
         return server_pb2.EndInferenceResponse(status_code=status.INFERENCE_END_ACCEPTED) 
+
+    async def test(self):
+        await asyncio.sleep(5)
+        return
 
     def update_network_is_ready(self):
        current_nodes_count = len(self.node_registry) 
