@@ -18,6 +18,7 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 # Configuration
 CWD =   os.getcwd()
 CONFIG_FILE_NAME = "config.json"
+DEFAULT_CREDENTIAL = "120120"
 
 CONFIG_FILE_PATH = path.join(CWD, CONFIG_FILE_NAME)
 DEFAULT_CONFIG = {
@@ -85,6 +86,10 @@ class DashboardServer():
         if not os.path.exists(CONFIG_FILE_PATH):
             with open(CONFIG_FILE_PATH, 'w') as f:
                 json.dump(DEFAULT_CONFIG, f, indent=4)
+
+    def authenticate(self, password):
+        valid_password = os.environ.get("SERVER_PWD", DEFAULT_CREDENTIAL)
+        return password == valid_password
 
 
 dashboard_server = DashboardServer()
@@ -191,12 +196,35 @@ async def handle_raw_inference():
 
 
 @app.route('/health', methods=['GET'])
+@cross_origin()
 async def health_check():
     """
     Simple health check endpoint
     """
     is_ready = dashboard_server.server.network_ready_future.done()
     return jsonify({"status": "ok", "is_ready": is_ready, "is_online": True}), 200
+
+@app.route('/auth', methods=['POST'])
+@cross_origin()
+def authenticate():
+    """
+    Simple login endpoint 
+    """
+    try:
+        # Check if the request contains JSON data
+        if not request.is_json:
+            return jsonify({"status": "error", "message": "Credentials are Required"}) 
+                
+        # Get the JSON data from the request
+        credentials = request.get_json()
+        password = credentials.get('password')
+
+        if dashboard_server.authenticate(password):
+            return jsonify({"status": "authenticated", "message": "Login Success"})
+        else:
+            return jsonify({"status": "error", "message": "Invalid Credentials"}) 
+    except:
+            return jsonify({"status": "error", "message": "Unexpected Error Occurred"}) 
 
 
 if __name__ == '__main__':
