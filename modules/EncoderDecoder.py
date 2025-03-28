@@ -114,9 +114,14 @@ class EncoderDecoderManager:
 
         if is_adaptive: 
             k, sparsity_ratio = self.sparsity_engine.compute_sparsity_level(inference_tensor=tensor)
+
+            # This ensures that sparse encoding is not applied if minimum required level of sparsity is not available.
+            # Here the 0.5 is obtained based on the mathematical proof that was obtained regarding the COO format.
+            # Please refer to the thesis Chapter 6 for the detailed explanation.
             strategy_name = 'sparse' if sparsity_ratio >= 0.5 else 'huffman'
 
             encoded_tensor = None
+
             if strategy_name == 'sparse':
                 encoded_tensor = self.strategies[strategy_name].encode(tensor, sparsity_level=k)
             else: 
@@ -131,7 +136,12 @@ class EncoderDecoderManager:
 
         encoded_tensor = None 
         if strategy_name == 'sparse':
-            encoded_tensor = self.strategies[strategy_name].encode(tensor, sparsity_level=1000) # Hardcoded for now
+            sparsity_level = self.sparsity_engine.defaults.sparsity_level;
+            total_activations = tensor.size
+
+            k = round((1 - sparsity_level) * total_activations)
+            encoded_tensor = self.strategies[strategy_name].encode(tensor, sparsity_level=k) # Hardcoded for now
+
         else: 
             encoded_tensor = self.strategies[strategy_name].encode(tensor)
 

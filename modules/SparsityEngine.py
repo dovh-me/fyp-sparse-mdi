@@ -19,6 +19,7 @@ class SparsityEngineDefaults:
     rtt_factor = 0.5
     pl_factor = 0 # Assuming no impact from Packet loss
     sparsity_factor = 1
+    sparsity_level = 0 # Total Sparsity level for the tensor (only used by sparse encoding strategy)
 
 class SparsityEngine:
     def __init__(self, network_observer: NetworkObservabilityTracker, defaults: SparsityEngineDefaults = SparsityEngineDefaults()):
@@ -44,6 +45,7 @@ class SparsityEngine:
         self.defaults.rtt_factor = node_config.get('rtt_factor', self.defaults.rtt_factor) 
         self.defaults.pl_factor = node_config.get('pl_factor', self.defaults.pl_factor) 
         self.defaults.sparsity_factor = node_config.get('sparsity_factor', self.defaults.sparsity_factor) 
+        self.defaults.sparsity_level = node_config.get('sparsity_level', self.defaults.sparsity_level)
 
     def compute_tensor_sparsity(self, tensor):
         """
