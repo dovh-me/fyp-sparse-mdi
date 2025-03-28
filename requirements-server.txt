@@ -2,5 +2,9 @@ gdown
 grpcio
 grpcio-tools
 flask
+flask[async]
 flask_cors
 numpy
+pillow
+onnx
+onnxruntime

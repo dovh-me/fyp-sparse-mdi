@@ -1,0 +1,62 @@
+services:
+  server:
+    build: .
+    command: python3 run_server.py
+    ports:
+      - "50051:50051"
+      - "4010:4010"
+    networks:
+      network1:
+        ipv4_address: 192.168.1.10
+
+  node1:
+    build: .
+    command: python3 run_node.py 192.168.1.10:50051
+    depends_on:
+      - server
+    networks:
+      network1:
+        ipv4_address: 192.168.1.11
+
+  node2:
+    build: .
+    command: python3 run_node.py 192.168.1.10:50051
+    depends_on:
+      - server
+    networks:
+      network1:
+        ipv4_address: 192.168.1.12
+
+  node3:
+    build: .
+    command: python3 run_node.py 192.168.1.10:50051
+    depends_on:
+      - server
+    networks:
+      network1:
+        ipv4_address: 192.168.1.13
+
+  node4:
+    build: .
+    command: python3 run_node.py 192.168.1.10:50051
+    depends_on:
+      - server
+    networks:
+      network1:
+        ipv4_address: 192.168.1.14
+
+  node5:
+    build: .
+    command: python3 run_node.py 192.168.1.10:50051
+    depends_on:
+      - server
+    networks:
+      network1:
+        ipv4_address: 192.168.1.15
+
+networks:
+  network1:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
