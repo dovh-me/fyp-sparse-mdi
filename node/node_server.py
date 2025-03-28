@@ -110,7 +110,7 @@ async def main(model_path, node, port=55001):
     server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
     node_service = NodeServer(model_path=model_path, node=node)
     node_pb2_grpc.add_NodeServiceServicer_to_server(node_service, server)
-    server.add_insecure_port(f"[::]:{port}")
+    server.add_insecure_port(f"0.0.0.0:{port}")
     await server.start()
 
     logger.log(f"Node server started on port {port}")

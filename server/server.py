@@ -10,6 +10,7 @@ import json
 from PIL import Image
 import threading
 import io
+import glob
 
 from modules.SparsityEngine import SparsityEngine
 
@@ -454,7 +455,7 @@ async def serve():
 
     # GRPC Server
     server_pb2_grpc.add_ServerServicer_to_server(coordinator_node, server)
-    server.add_insecure_port("[::]:" + str(port))
+    server.add_insecure_port("0.0.0.0:" + str(port))
     logger.log(f"Coordinator node started, listening on port {port}")
 
     # Dashboard server
