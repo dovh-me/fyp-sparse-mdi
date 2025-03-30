@@ -44,7 +44,7 @@ class DashboardServer():
 
         # Download the model partitions if the model partitions dir is not available
         partitions_dir = self.server.model_partitions_dir
-        has_model = len(glob.glob(f"**/{partitions_dir}/*.onnx")) > 0
+        has_model = len(glob.glob(f"{partitions_dir}/*.onnx")) > 0
 
         if not has_model:
             print("No model parts available. Downloading model from config.json...")
@@ -125,8 +125,6 @@ def update_config():
     """
     Endpoint to upload and save a new JSON configuration
     """
-    print('update config hit')
-
     def generate():
         try:
             # Check if the request contains JSON data
