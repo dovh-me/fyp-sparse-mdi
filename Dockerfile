@@ -1,11 +1,17 @@
 # Base image
 FROM python:3.9
 
+# Install iproute2 for tc command
+RUN apt-get update && apt-get install -y iproute2 && apt-get clean
+
 # Set the working directory
 WORKDIR /app
 
 # Copy the current directory contents into the container
 COPY . /app
+
+# Ensure the latency script is executable
+RUN chmod +x setup_tc.sh
 
 # Install dependencies (Assumes you have a requirements.txt)
 RUN pip install --no-cache-dir -r requirements-server.txt

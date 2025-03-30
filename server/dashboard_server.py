@@ -47,7 +47,7 @@ class DashboardServer():
         has_model = len(glob.glob(f"**/{partitions_dir}/*.onnx")) > 0
 
         if not has_model:
-            print(f"No model parts available. Downloading model from config.json... {self.server_config.get('model_id', "Unknown Model")}")
+            print("No model parts available. Downloading model from config.json...")
             self.download_and_extract_model_parts()
 
         app.run(debug=False, host=host, port=port)
