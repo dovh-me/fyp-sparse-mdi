@@ -101,6 +101,7 @@ class EncoderDecoderManager:
     def __init__(self, network_observer: NetworkObservabilityTracker, sparsity_engine: SparsityEngine):
         self.network_observer = network_observer
         self.strategies: Dict[str, EncodingStrategy] = {}
+        self.threshold = 0.55
         self.register_strategy('huffman', HuffmanEncoding())
         self.register_strategy('sparse', SparseEncoding(network_observer=network_observer))
 
@@ -118,7 +119,7 @@ class EncoderDecoderManager:
             # This ensures that sparse encoding is not applied if minimum required level of sparsity is not available.
             # Here the 0.5 is obtained based on the mathematical proof that was obtained regarding the COO format.
             # Please refer to the thesis Chapter 6 for the detailed explanation.
-            strategy_name = 'sparse' if sparsity_ratio >= 0.5 else 'huffman'
+            strategy_name = 'sparse' if sparsity_ratio >= self.threshold else 'huffman'
 
             encoded_tensor = None
 

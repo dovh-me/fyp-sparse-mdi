@@ -145,5 +145,5 @@ if __name__ == "__main__":
     tiny_imagenet_dir = "./data/imagenet-100"  # Directory containing Tiny ImageNet
     ood_dir = "./data/imagenet_ood"   # Directory containing ImageNet OOD (optional)
     dataset = load_tiny_imagenet_and_ood(tiny_imagenet_dir, ood_dir)
-    server_address = "192.168.1.101:50051"
+    server_address = "192.168.1.2:50051"
     asyncio.run(perform_inference(server_address, dataset))
