@@ -140,12 +140,16 @@ async def perform_inference(server_address: str, dataset):
             # Call the GetInferenceMetrics RPC
             metrics_request = server_pb2.InferenceMetricsRequest()
             response: server_pb2.InferenceMetricsResponse = await stub.GetInferenceMetrics(metrics_request)
+
+            # Compute precision, recall, and F1-score for each class
             print(classification_report(ground_truth, pred, digits=4))
             print(f"Total egress bytes: {response.egress_bytes}B")
             print(f"As Mega Bytes: {response.egress_bytes / (1000 * 1000)}MB")
             print(f"Time elapsed: {inference_iterator.format_dict['elapsed']}s")
-            print(f"{accuracy:.2%},{response.egress_bytes}B,{response.egress_bytes / (1000 * 1000)}MB,{inference_iterator.format_dict['elapsed']}s")
-            # Compute precision, recall, and F1-score for each class
+            csv_line = f"{accuracy:.2%},{response.egress_bytes}B,{response.egress_bytes / (1000 * 1000)}MB,{inference_iterator.format_dict['elapsed']}s"
+            print(csv_line)
+            with open("results.csv", "a") as f:
+               f.write(f"\n{csv_line}") 
         except Exception as e:
             print(e)
 
