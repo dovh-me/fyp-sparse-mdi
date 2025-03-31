@@ -1,5 +1,7 @@
 {
+    "config_id": "Resnet-18-CIFAR10-3-nodes",
     "server_config": {
+        "model_id": "Resnet-18-CIFAR10",
         "input_shape": [
             1,
             3,
