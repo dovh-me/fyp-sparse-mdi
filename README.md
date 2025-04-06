@@ -1,3 +1,5 @@
+[![CodeFactor](https://www.codefactor.io/repository/github/dovh-me/fyp-sparse-mdi/badge/main)](https://www.codefactor.io/repository/github/dovh-me/fyp-sparse-mdi/overview/main)
+
 # Step 1: Check Python version or install Python via Homebrew
 
 python3 --version
