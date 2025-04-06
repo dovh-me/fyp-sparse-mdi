@@ -66,7 +66,6 @@ class Server(server_pb2_grpc.ServerServicer):
         """
         # This is to make sure the ports don't overlap when running with mininet
         # Not required in the final implementation
-        # TODO: Remove
         global node_ports
         node_ports+=1
         node_port = node_ports
@@ -140,10 +139,10 @@ class Server(server_pb2_grpc.ServerServicer):
 
         # Get the port from the request
         if(request.port == None):
-            return  server_pb2.ReadyResponse(status_code=status.NODE_UPDATE_ERROR, message="Port is required")
+            return server_pb2.ReadyResponse(status_code=status.NODE_UPDATE_ERROR, message="Port is required")
 
         if(request.node_id == None): 
-            return  server_pb2.ReadyResponse(status_code=status.NODE_UPDATE_ERROR, message="Node Id is required")
+            return server_pb2.ReadyResponse(status_code=status.NODE_UPDATE_ERROR, message="Node Id is required")
         
         node_id = request.node_id
         ready_node_ip += f":{request.port}"
@@ -200,7 +199,7 @@ class Server(server_pb2_grpc.ServerServicer):
         return server_pb2.Test() 
 
     async def Ping(self, request:server_pb2.ServerPingRequest, context: grpc.RpcContext) -> server_pb2.ServerPingResponse:
-        return server_pb2.ServerPingResponse();
+        return server_pb2.ServerPingResponse()
 
     def preprocess_image(self, input_bytes, target_size=(224, 224)):
         """
@@ -294,7 +293,7 @@ class Server(server_pb2_grpc.ServerServicer):
 
             print(f"result: {task.done()}")
             result = await task 
-            return  result
+            return result
 
         except Exception as e:
             logger.log(f"There was error processing inference task: {task_id}")
@@ -338,7 +337,7 @@ class Server(server_pb2_grpc.ServerServicer):
             result = result.tobytes()
 
             return server_pb2.StartInferenceResponse(status_code=status.INFERENCE_SUCCESS, result=result)
-        except:
+        except Exception as e:
             logger.log(f"There was error processing inference task: {task_id}")
             traceback.logger.log_exc()
 
@@ -431,7 +430,7 @@ class Server(server_pb2_grpc.ServerServicer):
                     return server_pb2.StartInferenceResponse(status_code=status.SERVER_ERROR, message="There was an error starting inference")  
 
                 logger.log(f"Task ID [{task_id}]: Inference accepted")
-        except:
+        except Exception as e:
             traceback.logger.log_exc() 
 
     async def Ping(self, request: server_pb2.ServerPingRequest, context: grpc.RpcContext) -> server_pb2.ServerPingResponse:
@@ -472,7 +471,7 @@ async def serve():
     try:
         await server.start()
         await coordinator_node.run()
-    except:
+    except Exception as e:
         # Shutting down the server if there's a fatal error
         logger.log(f"Terminating coordinator node due to a fatal error. Please contact support.")
         await server.stop(grace=None)
