@@ -1,5 +1,5 @@
 # Base image
-FROM python:3.9
+FROM python:3.14-rc-slim-bookworm
 
 # Install iproute2 for tc command
 RUN apt-get update && apt-get install -y iproute2 && apt-get clean
