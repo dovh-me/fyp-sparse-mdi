@@ -14,7 +14,7 @@ COPY . /app
 RUN chmod +x setup_tc.sh
 
 # Install dependencies (Assumes you have a requirements.txt)
-RUN pip install --no-cache-dir -r requirements-server.txt
+RUN pip install -r requirements-server.txt
 
 # Expose any necessary ports (if required)
 ## Adjust based on your application

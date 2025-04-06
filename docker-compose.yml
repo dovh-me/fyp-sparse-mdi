@@ -4,6 +4,8 @@ services:
   server:
     build: .
     command: python3 run_server.py
+    cap_add:
+      - NET_ADMIN
     ports:
       - "50051:50051"
       - "4010:4010"
@@ -23,6 +25,8 @@ services:
   node1:
     build: .
     entrypoint: ["/bin/sh", "-c", "/app/setup_tc.sh && python3 run_node.py 192.168.1.10:50051"]
+    cap_add:
+      - NET_ADMIN
     depends_on:
       - wait-for-server
     networks:
@@ -32,6 +36,8 @@ services:
   node2:
     build: .
     entrypoint: ["/bin/sh", "-c", "/app/setup_tc.sh && python3 run_node.py 192.168.1.10:50051"]
+    cap_add:
+      - NET_ADMIN
     depends_on:
       - wait-for-server
     networks:
@@ -41,6 +47,8 @@ services:
   node3:
     build: .
     entrypoint: ["/bin/sh", "-c", "/app/setup_tc.sh && python3 run_node.py 192.168.1.10:50051"]
+    cap_add:
+      - NET_ADMIN
     depends_on:
       - wait-for-server
     networks:
