@@ -17,7 +17,7 @@ cors = CORS(app) # allow CORS for all domains on all routes.
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 # Configuration
-CWD =   os.getcwd()
+CWD = os.getcwd()
 CONFIG_FILE_NAME = "config.json"
 DEFAULT_CREDENTIAL = "120120"
 
@@ -63,7 +63,7 @@ class DashboardServer():
             logger.log("Server config not found. Aborting download.")
             return
 
-        gdrive_model_parts_id = server_config.get('model_gdrive_id');
+        gdrive_model_parts_id = server_config.get('model_gdrive_id')
         download_file_name = "model_parts.zip"
 
         if(gdrive_model_parts_id == None):
@@ -230,7 +230,7 @@ def authenticate():
             return jsonify({"status": "authenticated", "message": "Login Success"})
         else:
             return jsonify({"status": "error", "message": "Invalid Credentials"}) 
-    except:
+    except Exception as e:
             return jsonify({"status": "error", "message": "Unexpected Error Occurred"}) 
 
 
