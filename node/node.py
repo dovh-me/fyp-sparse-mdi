@@ -6,6 +6,7 @@ import numpy as np
 import onnxruntime as ort
 import time
 import json
+import re
 
 from util import status, logger
 logger = logger.logger
@@ -81,6 +82,11 @@ class Node:
                     self.load_config()
 
         logger.set_logger_id(self.port) 
+
+        # Validate the model_part_id
+        model_part_id = f"{self.model_part_id}"
+        if not re.match("^[A-Za-z0-9_-]*$", model_part_id):
+           raise Exception('Invalid model_part_id') 
 
         # Rename the downloaded file
         updated_model_file_path = f"model_part_{self.model_part_id}.onnx"
