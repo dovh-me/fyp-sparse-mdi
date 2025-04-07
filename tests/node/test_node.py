@@ -4,7 +4,7 @@ import numpy as np
 from unittest.mock import AsyncMock, MagicMock, patch
 from node.node import Node, NodeNotConnected
 from modules.NetworkObservabilityTracker import NetworkObservabilityTracker
-from modules.SparsityEngine import SparsityEngine
+from modules.AdaptiveSparsityEngine import SparsityEngine
 from modules.EncoderDecoder import EncoderDecoderManager, HuffmanEncoding
 from generated.node_pb2 import InferenceRequest, InferenceResponse, PingRequest
 from generated.node_pb2_grpc import NodeServiceStub

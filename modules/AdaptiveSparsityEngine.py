@@ -21,7 +21,7 @@ class SparsityEngineDefaults:
     sparsity_factor = 1
     sparsity_level = 0 # Total Sparsity level for the tensor (only used by sparse encoding strategy)
 
-class SparsityEngine:
+class AdaptiveSparsityEngine:
     def __init__(self, network_observer: NetworkObservabilityTracker, defaults: SparsityEngineDefaults = SparsityEngineDefaults()):
         """
         Initializes the Adaptive Sparsity Manager.

@@ -8,7 +8,7 @@ sys.path.insert(0, module_path)
 
 from modules.EncoderDecoder import HuffmanEncoding, SparseEncoding, EncoderDecoderManager
 from modules.NetworkObservabilityTracker import NetworkObservabilityTracker
-from modules.SparsityEngine import SparsityEngine
+from modules.AdaptiveSparsityEngine import SparsityEngine
 
 @pytest.fixture
 def network_observer():

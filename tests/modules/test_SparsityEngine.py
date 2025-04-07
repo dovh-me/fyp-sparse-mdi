@@ -7,7 +7,7 @@ module_path = os.path.abspath('./')
 sys.path.insert(0, module_path)
 
 from modules.NetworkObservabilityTracker import NetworkObservabilityTracker
-from modules.SparsityEngine import SparsityEngine, SparsityEngineDefaults
+from modules.AdaptiveSparsityEngine import SparsityEngine, SparsityEngineDefaults
 
 @pytest.fixture
 def tracker():

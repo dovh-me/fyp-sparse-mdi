@@ -9,7 +9,7 @@ module_path = os.path.abspath('../')
 sys.path.insert(0, module_path)
 
 from modules.NetworkObservabilityTracker import NetworkObservabilityTracker
-from modules.SparsityEngine import SparsityEngine
+from modules.AdaptiveSparsityEngine import SparsityEngine
 from util.logger import logger
 
 # Base Encoding Strategy

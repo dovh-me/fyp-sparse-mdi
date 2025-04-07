@@ -12,7 +12,7 @@ import threading
 import io
 import glob
 
-from modules.SparsityEngine import SparsityEngine
+from modules.AdaptiveSparsityEngine import SparsityEngine
 
 module_path = os.path.abspath('../')
 sys.path.insert(0, module_path)

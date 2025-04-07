@@ -14,7 +14,7 @@ logger = logger.logger
 module_path = os.path.abspath('../')
 sys.path.insert(0, module_path)
 
-from modules.SparsityEngine import SparsityEngine, SparsityEngineDefaults
+from modules.AdaptiveSparsityEngine import SparsityEngine, SparsityEngineDefaults
 from modules.EncoderDecoder import EncoderDecoderManager
 from modules.NetworkObservabilityTracker import NetworkObservabilityTracker
 from node.node_server import main as serve
