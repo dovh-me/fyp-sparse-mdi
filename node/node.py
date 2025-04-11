@@ -14,7 +14,7 @@ logger = logger.logger
 module_path = os.path.abspath('../')
 sys.path.insert(0, module_path)
 
-from modules.AdaptiveSparsityEngine import SparsityEngine, SparsityEngineDefaults
+from modules.AdaptiveSparsityEngine import AdaptiveSparsityEngine, SparsityEngineDefaults
 from modules.EncoderDecoder import EncoderDecoderManager
 from modules.NetworkObservabilityTracker import NetworkObservabilityTracker
 from node.node_server import main as serve
@@ -39,7 +39,7 @@ class Node:
         self.model_part_id = None
         self.port = None
         self.network_observability = NetworkObservabilityTracker()
-        self.sparsity_engine = SparsityEngine(network_observer=self.network_observability)
+        self.sparsity_engine = AdaptiveSparsityEngine(network_observer=self.network_observability)
         self.encoderDecoder = EncoderDecoderManager(network_observer=self.network_observability, sparsity_engine=self.sparsity_engine)
         self.connection = asyncio.Future() 
         self.next_node = asyncio.Future() 

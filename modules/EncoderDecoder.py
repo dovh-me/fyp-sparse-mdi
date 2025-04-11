@@ -9,7 +9,7 @@ module_path = os.path.abspath('../')
 sys.path.insert(0, module_path)
 
 from modules.NetworkObservabilityTracker import NetworkObservabilityTracker
-from modules.AdaptiveSparsityEngine import SparsityEngine
+from modules.AdaptiveSparsityEngine import AdaptiveSparsityEngine
 from util.logger import logger
 
 # Base Encoding Strategy
@@ -40,7 +40,7 @@ class HuffmanEncoding(EncodingStrategy):
 class SparseEncoding(EncodingStrategy):
     def __init__(self, network_observer):
         super().__init__()
-        self.sparsity_engine = SparsityEngine(network_observer=network_observer)
+        self.sparsity_engine = AdaptiveSparsityEngine(network_observer=network_observer)
         self.network_observer: NetworkObservabilityTracker = network_observer
 
     def top_k_sparsify(self, activations, k):
@@ -98,7 +98,7 @@ class SparseEncoding(EncodingStrategy):
 
 # Encoder-Decoder Manager
 class EncoderDecoderManager:
-    def __init__(self, network_observer: NetworkObservabilityTracker, sparsity_engine: SparsityEngine):
+    def __init__(self, network_observer: NetworkObservabilityTracker, sparsity_engine: AdaptiveSparsityEngine):
         self.network_observer = network_observer
         self.strategies: Dict[str, EncodingStrategy] = {}
         self.threshold = 0.55

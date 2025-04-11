@@ -12,7 +12,7 @@ import threading
 import io
 import glob
 
-from modules.AdaptiveSparsityEngine import SparsityEngine
+from modules.AdaptiveSparsityEngine import AdaptiveSparsityEngine
 
 module_path = os.path.abspath('../')
 sys.path.insert(0, module_path)
@@ -50,7 +50,7 @@ class Server(server_pb2_grpc.ServerServicer):
         self.node_config = node_config 
         self.server_config = server_config
         self.network_observer = NetworkObservabilityTracker()
-        self.sparsity_engine = SparsityEngine(network_observer=self.network_observer)
+        self.sparsity_engine = AdaptiveSparsityEngine(network_observer=self.network_observer)
         self.encoderDecoder = EncoderDecoderManager(network_observer=self.network_observer, sparsity_engine=self.sparsity_engine)
         self.PROCESSES = multiprocessing.cpu_count() - 1
 
