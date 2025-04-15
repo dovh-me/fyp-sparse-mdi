@@ -8,3 +8,4 @@ numpy
 pillow
 onnx>=1.17.0
 onnxruntime
+psutil

@@ -40,6 +40,8 @@ class Server(server_pb2_grpc.ServerServicer):
     def __init__(self, node_config = [], server_config = {}):
         super().__init__()
         self.node_registry = {}  # Maps node IPs to their assigned model parts
+        self.node_config_map = {} # Maps node IPs to their assigned node id
+        self.node_spec = {} # Maps node IPs with the node specs
         self.model_partitions_dir = "./model_parts"
         self.first_node_ip = None
         self.last_node_ip = None
@@ -82,6 +84,12 @@ class Server(server_pb2_grpc.ServerServicer):
             )
             return
 
+        if request.specs is None:
+            yield server_pb2.RegisterResponse(
+                status_code=status.BAD_REQUEST,
+            )
+            return
+
         # Allocate the next available model part
         model_parts = sorted([os.path.splitext(filename)[0] for filename in filter(lambda x: x.endswith('.onnx'), os.listdir(self.model_partitions_dir))])
         assigned_part = None
@@ -113,6 +121,7 @@ class Server(server_pb2_grpc.ServerServicer):
         node_config = {}
         if node_index < len(self.node_config):
             node_config = self.node_config[node_index]
+            self.node_config_map[new_node_ip] = node_config
             self.assigned_node_config_index+=1
 
         try:
@@ -389,6 +398,29 @@ class Server(server_pb2_grpc.ServerServicer):
             await self.send_for_inference(inference_task)
             self.inference_queue.task_done()  # Mark the task as done
 
+    async def get_network_free_resources(self):
+        available_resources = {}
+        for node_ip in self.node_registry:
+            available_resources[node_ip] = await self.get_free_resources_from_ip(ip=node_ip)
+
+        print(f"available_resources: {available_resources}")
+        return available_resources
+
+    async def get_free_resources_from_ip(self, ip):
+        async with grpc.aio.insecure_channel(ip) as channel:
+            stub = node_pb2_grpc.NodeServiceStub(channel)
+            request = node_pb2.FreeResourcesRequest()
+            response = await stub.GetFreeResources(request)
+            
+        print(f"response:get_free_resources_from_ip: {ip} : {response}")
+
+        return {
+            'cpu': response.cpu,
+            'ram': response.mem,
+            'hdd': response.hdd
+        }
+
+
     async def GetInferenceMetrics(self, request, context):
         logger.log(f"NodeServer: Inference request received")
         egress_bytes= 0
@@ -396,7 +428,7 @@ class Server(server_pb2_grpc.ServerServicer):
             metrics_task = await self.get_inference_metrics_from_node(node_ip=node_ip)
             egress_bytes += metrics_task.egress_bytes
             logger.log(f"{node_ip}: {egress_bytes}B")
-        
+
         return server_pb2.InferenceMetricsResponse(egress_bytes=egress_bytes)
     
     async def get_inference_metrics_from_node(self, node_ip) -> node_pb2.NodeInferenceMetricsResponse:

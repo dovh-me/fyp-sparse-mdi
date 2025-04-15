@@ -1,5 +1,5 @@
 {
-    "config_id": "Mobilenet-v2-3-nodes",
+    "config_id": "Mobilenet-v2-3n",
     "server_config": {
         "model_id": "Mobilenet-v2-3-nodes",
         "input_shape": [

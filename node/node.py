@@ -8,7 +8,7 @@ import time
 import json
 import re
 
-from util import status, logger
+from util import status, logger, system_information
 logger = logger.logger
 
 module_path = os.path.abspath('../')
@@ -50,7 +50,10 @@ class Node:
         """
         Register the node with the coordination server and handle streamed model parts.
         """
-        request = RegisterRequest()
+        node_spec = self.get_node_spec()
+        node_specs = json.dumps(node_spec)
+        
+        request = RegisterRequest(specs=node_specs)
 
         model_file_path = f"model_part_{self.model_part_id}.onnx"
         with open(model_file_path, "wb") as model_file:
@@ -105,6 +108,13 @@ class Node:
         logger.log(f"Model input shape: {self.input_shape}, {self.config}")
 
         return (updated_model_file_path, self.port, self.config.get("node_id", ""))
+
+    def get_node_spec(self):
+        # Get the system information
+        return system_information.get_info()
+
+    def get_free_resources(self):
+        return system_information.get_available_resources()
 
     def load_config(self):
         node_config = self.config

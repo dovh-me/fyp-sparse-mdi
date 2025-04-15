@@ -57,10 +57,12 @@ class ReadyResponse(_message.Message):
     def __init__(self, status_code: _Optional[int] = ..., message: _Optional[str] = ...) -> None: ...
 
 class RegisterRequest(_message.Message):
-    __slots__ = ("ip",)
+    __slots__ = ("ip", "specs")
     IP_FIELD_NUMBER: _ClassVar[int]
+    SPECS_FIELD_NUMBER: _ClassVar[int]
     ip: str
-    def __init__(self, ip: _Optional[str] = ...) -> None: ...
+    specs: str
+    def __init__(self, ip: _Optional[str] = ..., specs: _Optional[str] = ...) -> None: ...
 
 class RegisterResponse(_message.Message):
     __slots__ = ("status_code", "message", "first_node", "prev_node", "model_part_id", "port", "chunk", "config")

@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0cserver.proto\"\x06\n\x04Test\"-\n\x15StartInferenceRequest\x12\x14\n\x0cinput_tensor\x18\x01 \x01(\x0c\"N\n\x16StartInferenceResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x0e\n\x06result\x18\x03 \x01(\x0c\"6\n\x13\x45ndInferenceRequest\x12\x0f\n\x07task_id\x18\x01 \x01(\x05\x12\x0e\n\x06result\x18\x02 \x01(\x0c\"<\n\x14\x45ndInferenceResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\"-\n\x0cReadyRequest\x12\x0c\n\x04port\x18\x01 \x01(\x05\x12\x0f\n\x07node_id\x18\x02 \x01(\t\"5\n\rReadyResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\"\x1d\n\x0fRegisterRequest\x12\n\n\x02ip\x18\x01 \x01(\t\"\xa3\x01\n\x10RegisterResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x12\n\nfirst_node\x18\x04 \x01(\t\x12\x11\n\tprev_node\x18\x05 \x01(\t\x12\x15\n\rmodel_part_id\x18\x06 \x01(\t\x12\x0c\n\x04port\x18\x07 \x01(\x05\x12\r\n\x05\x63hunk\x18\x08 \x01(\x0c\x12\x0e\n\x06\x63onfig\x18\t \x01(\t\"\x19\n\x17InferenceMetricsRequest\"t\n\x18InferenceMetricsResponse\x12\x15\n\ringress_bytes\x18\x01 \x01(\x03\x12\x14\n\x0c\x65gress_bytes\x18\x02 \x01(\x03\x12\x14\n\x0cvalues_bytes\x18\x03 \x01(\x03\x12\x15\n\rindices_bytes\x18\x04 \x01(\x03\"\x13\n\x11ServerPingRequest\"\x14\n\x12ServerPingResponse2\x80\x03\n\x06Server\x12\x15\n\x05Hello\x12\x05.Test\x1a\x05.Test\x12\x35\n\x0cRegisterNode\x12\x10.RegisterRequest\x1a\x11.RegisterResponse0\x01\x12+\n\x0bInformReady\x12\r.ReadyRequest\x1a\r.ReadyRequest\x12\x41\n\x0eStartInference\x12\x16.StartInferenceRequest\x1a\x17.StartInferenceResponse\x12;\n\x0c\x45ndInference\x12\x14.EndInferenceRequest\x1a\x15.EndInferenceResponse\x12J\n\x13GetInferenceMetrics\x12\x18.InferenceMetricsRequest\x1a\x19.InferenceMetricsResponse\x12/\n\x04Ping\x12\x12.ServerPingRequest\x1a\x13.ServerPingResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0cserver.proto\"\x06\n\x04Test\"-\n\x15StartInferenceRequest\x12\x14\n\x0cinput_tensor\x18\x01 \x01(\x0c\"N\n\x16StartInferenceResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x0e\n\x06result\x18\x03 \x01(\x0c\"6\n\x13\x45ndInferenceRequest\x12\x0f\n\x07task_id\x18\x01 \x01(\x05\x12\x0e\n\x06result\x18\x02 \x01(\x0c\"<\n\x14\x45ndInferenceResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\"-\n\x0cReadyRequest\x12\x0c\n\x04port\x18\x01 \x01(\x05\x12\x0f\n\x07node_id\x18\x02 \x01(\t\"5\n\rReadyResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\",\n\x0fRegisterRequest\x12\n\n\x02ip\x18\x01 \x01(\t\x12\r\n\x05specs\x18\x02 \x01(\t\"\xa3\x01\n\x10RegisterResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x12\n\nfirst_node\x18\x04 \x01(\t\x12\x11\n\tprev_node\x18\x05 \x01(\t\x12\x15\n\rmodel_part_id\x18\x06 \x01(\t\x12\x0c\n\x04port\x18\x07 \x01(\x05\x12\r\n\x05\x63hunk\x18\x08 \x01(\x0c\x12\x0e\n\x06\x63onfig\x18\t \x01(\t\"\x19\n\x17InferenceMetricsRequest\"t\n\x18InferenceMetricsResponse\x12\x15\n\ringress_bytes\x18\x01 \x01(\x03\x12\x14\n\x0c\x65gress_bytes\x18\x02 \x01(\x03\x12\x14\n\x0cvalues_bytes\x18\x03 \x01(\x03\x12\x15\n\rindices_bytes\x18\x04 \x01(\x03\"\x13\n\x11ServerPingRequest\"\x14\n\x12ServerPingResponse2\x80\x03\n\x06Server\x12\x15\n\x05Hello\x12\x05.Test\x1a\x05.Test\x12\x35\n\x0cRegisterNode\x12\x10.RegisterRequest\x1a\x11.RegisterResponse0\x01\x12+\n\x0bInformReady\x12\r.ReadyRequest\x1a\r.ReadyRequest\x12\x41\n\x0eStartInference\x12\x16.StartInferenceRequest\x1a\x17.StartInferenceResponse\x12;\n\x0c\x45ndInference\x12\x14.EndInferenceRequest\x1a\x15.EndInferenceResponse\x12J\n\x13GetInferenceMetrics\x12\x18.InferenceMetricsRequest\x1a\x19.InferenceMetricsResponse\x12/\n\x04Ping\x12\x12.ServerPingRequest\x1a\x13.ServerPingResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -46,17 +46,17 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_READYRESPONSE']._serialized_start=316
   _globals['_READYRESPONSE']._serialized_end=369
   _globals['_REGISTERREQUEST']._serialized_start=371
-  _globals['_REGISTERREQUEST']._serialized_end=400
-  _globals['_REGISTERRESPONSE']._serialized_start=403
-  _globals['_REGISTERRESPONSE']._serialized_end=566
-  _globals['_INFERENCEMETRICSREQUEST']._serialized_start=568
-  _globals['_INFERENCEMETRICSREQUEST']._serialized_end=593
-  _globals['_INFERENCEMETRICSRESPONSE']._serialized_start=595
-  _globals['_INFERENCEMETRICSRESPONSE']._serialized_end=711
-  _globals['_SERVERPINGREQUEST']._serialized_start=713
-  _globals['_SERVERPINGREQUEST']._serialized_end=732
-  _globals['_SERVERPINGRESPONSE']._serialized_start=734
-  _globals['_SERVERPINGRESPONSE']._serialized_end=754
-  _globals['_SERVER']._serialized_start=757
-  _globals['_SERVER']._serialized_end=1141
+  _globals['_REGISTERREQUEST']._serialized_end=415
+  _globals['_REGISTERRESPONSE']._serialized_start=418
+  _globals['_REGISTERRESPONSE']._serialized_end=581
+  _globals['_INFERENCEMETRICSREQUEST']._serialized_start=583
+  _globals['_INFERENCEMETRICSREQUEST']._serialized_end=608
+  _globals['_INFERENCEMETRICSRESPONSE']._serialized_start=610
+  _globals['_INFERENCEMETRICSRESPONSE']._serialized_end=726
+  _globals['_SERVERPINGREQUEST']._serialized_start=728
+  _globals['_SERVERPINGREQUEST']._serialized_end=747
+  _globals['_SERVERPINGRESPONSE']._serialized_start=749
+  _globals['_SERVERPINGRESPONSE']._serialized_end=769
+  _globals['_SERVER']._serialized_start=772
+  _globals['_SERVER']._serialized_end=1156
 # @@protoc_insertion_point(module_scope)

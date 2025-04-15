@@ -49,6 +49,11 @@ class NodeServiceStub(object):
                 request_serializer=node__pb2.NodeInferenceMetricsRequest.SerializeToString,
                 response_deserializer=node__pb2.NodeInferenceMetricsResponse.FromString,
                 _registered_method=True)
+        self.GetFreeResources = channel.unary_unary(
+                '/NodeService/GetFreeResources',
+                request_serializer=node__pb2.FreeResourcesRequest.SerializeToString,
+                response_deserializer=node__pb2.FreeResourcesResponse.FromString,
+                _registered_method=True)
         self.Ping = channel.unary_unary(
                 '/NodeService/Ping',
                 request_serializer=node__pb2.PingRequest.SerializeToString,
@@ -77,6 +82,12 @@ class NodeServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetFreeResources(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def Ping(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -100,6 +111,11 @@ def add_NodeServiceServicer_to_server(servicer, server):
                     servicer.GetInferenceMetrics,
                     request_deserializer=node__pb2.NodeInferenceMetricsRequest.FromString,
                     response_serializer=node__pb2.NodeInferenceMetricsResponse.SerializeToString,
+            ),
+            'GetFreeResources': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetFreeResources,
+                    request_deserializer=node__pb2.FreeResourcesRequest.FromString,
+                    response_serializer=node__pb2.FreeResourcesResponse.SerializeToString,
             ),
             'Ping': grpc.unary_unary_rpc_method_handler(
                     servicer.Ping,
@@ -188,6 +204,33 @@ class NodeService(object):
             '/NodeService/GetInferenceMetrics',
             node__pb2.NodeInferenceMetricsRequest.SerializeToString,
             node__pb2.NodeInferenceMetricsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetFreeResources(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/NodeService/GetFreeResources',
+            node__pb2.FreeResourcesRequest.SerializeToString,
+            node__pb2.FreeResourcesResponse.FromString,
             options,
             channel_credentials,
             insecure,

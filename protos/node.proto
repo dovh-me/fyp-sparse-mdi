@@ -4,6 +4,7 @@ service NodeService {
     rpc Infer (InferenceRequest) returns (InferenceResponse);
     rpc UpdateNextNode(UpdateNextNodeRequest) returns (UpdateNextNodeResponse);
     rpc GetInferenceMetrics(NodeInferenceMetricsRequest) returns (NodeInferenceMetricsResponse);
+    rpc GetFreeResources(FreeResourcesRequest) returns (FreeResourcesResponse);
     rpc Ping(PingRequest) returns (PingResponse);
 }
 
@@ -40,3 +41,10 @@ message UpdateNextNodeResponse {
 
 message PingRequest {}
 message PingResponse {}
+
+message FreeResourcesRequest {}
+message FreeResourcesResponse {
+  float cpu = 1;
+  float mem = 2;
+  float hdd = 3;
+}

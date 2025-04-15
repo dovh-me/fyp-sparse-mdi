@@ -101,6 +101,11 @@ class NodeServer(node_pb2_grpc.NodeServiceServicer):
                 message=message
             ) 
 
+    async def GetFreeResources(self, request, context):
+        available_resources = self.node.get_free_resources()
+        response = node_pb2.FreeResourcesResponse(cpu=available_resources['cpu'], mem=available_resources['ram'], hdd=available_resources['hdd'])
+        return response
+
     
 async def main(model_path, node, port=55001): 
     """

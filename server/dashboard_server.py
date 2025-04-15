@@ -119,6 +119,75 @@ def download_progress():
     """
     return send_file(CONFIG_FILE_PATH, mimetype='application/json')
 
+@app.route('/nodes', methods=['GET'])
+@cross_origin()
+def get_nodes():
+    """
+    Endpoint to get the nodes and their status 
+    """
+    node_registry = dashboard_server.server.node_registry
+    node_config_registry = dashboard_server.server.node_config_map
+    assigned_config_index = dashboard_server.server.assigned_node_config_index
+    unassigned_node_configs = dashboard_server.server.node_config[assigned_config_index:]
+    res_json = {'online': [], 'offline': unassigned_node_configs}
+
+    for ip in node_registry.keys():
+        res_json["online"].append({
+            'ip': ip,
+            'config': node_config_registry[ip],
+            'model_part': node_registry[ip]
+        })   
+
+    return jsonify(res_json)
+
+@app.route('/free', methods=['GET'])
+async def get_free_resources():
+    """
+    Endpoint to get the nodes and their status 
+    """
+    try:
+        resources = await dashboard_server.server.get_network_free_resources()
+        return jsonify(resources)
+    except Exception as e:
+        message = f"Error occurred fetching free resources. {e}"
+        logger.error(message)
+        return jsonify({'error': 500, 'message': message}), 500 
+
+@app.route('/nodes2', methods=['GET'])
+@cross_origin()
+def get_nodes2():
+    """
+    Endpoint to get the nodes and their status 
+    """
+    def find_index(list, predicate):
+        for index, item in enumerate(list):
+            is_item = predicate(item, index)
+
+            if is_item:
+                return index
+
+        else:
+            return -1
+    
+    node_registry = dashboard_server.server.node_registry
+    node_config_registry = dashboard_server.server.node_config_map
+    node_configs = dashboard_server.server.node_config
+    res_json = node_configs.copy()
+
+    for ip in node_registry.keys():
+        config = node_config_registry[ip]
+        node_index = find_index(res_json, lambda e,i: e['node_id'] == config['node_id'])
+
+        if node_index < 0:
+            continue
+
+        res_json[node_index] = res_json[node_index].copy()
+        res_json[node_index]['model_part'] =  node_registry[ip]
+        res_json[node_index]['status'] = 'online' 
+        res_json[node_index]['ip'] = ip 
+
+    return jsonify(res_json)
+
 @app.route('/config', methods=['POST'])
 @cross_origin()
 def update_config():

@@ -63,3 +63,17 @@ class PingRequest(_message.Message):
 class PingResponse(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
+
+class FreeResourcesRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class FreeResourcesResponse(_message.Message):
+    __slots__ = ("cpu", "mem", "hdd")
+    CPU_FIELD_NUMBER: _ClassVar[int]
+    MEM_FIELD_NUMBER: _ClassVar[int]
+    HDD_FIELD_NUMBER: _ClassVar[int]
+    cpu: float
+    mem: float
+    hdd: float
+    def __init__(self, cpu: _Optional[float] = ..., mem: _Optional[float] = ..., hdd: _Optional[float] = ...) -> None: ...
